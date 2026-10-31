@@ -251,7 +251,22 @@ export default function App() {
   }, []);
 
   // En mode favoris, on n'affiche jamais les résultats de recherche (bug : ils polluaient la liste)
-  const displayedFeatures = mode.type === "favoris" || !searchResults ? visibleFeatures : searchResults;
+  // Interrupteur "zone" : si activé, on ne garde que les points dans la bbox visible
+  const [zoneOnly, setZoneOnly] = useState(false);
+  const displayedFeatures = useMemo(() => {
+    let list = mode.type === "favoris" || !searchResults ? visibleFeatures : searchResults;
+    if (zoneOnly && bbox) {
+      const [w, s, e, n] = bbox.split(",").map(Number);
+      list = list.filter((f) => {
+        const [lng, lat] = f.geometry.coordinates;
+        return lng >= w && lng <= e && lat >= s && lat <= n;
+      });
+    }
+    return list;
+  }, [mode.type, searchResults, visibleFeatures, zoneOnly, bbox]);
+
+  // Panneau du bas replié par défaut sur mobile, déplié au clic sur un onglet
+  const [panelOpen, setPanelOpen] = useState(false);
 
   // Ref des features affichées (pour récupérer type.id/icone des fiches detail=fiche)
   const displayedRef = useRef([]);
@@ -465,6 +480,9 @@ export default function App() {
       } else if (tab === "favoris" && t === "liste") {
         setMode({ type: "zone" });
       }
+      // clic sur un onglet -> déplie le panneau ; reclic sur l'onglet actif -> replie
+      if (t === tab) setPanelOpen((o) => !o);
+      else setPanelOpen(true);
       setTab(t);
     },
     [tab]
@@ -556,7 +574,8 @@ export default function App() {
             onBasemapChange={changeBasemap}
             hillshade={hillshade}
             onHillshadeChange={setHillshade}
-            onZoneClick={onZoneClick}
+            zoneOnly={zoneOnly}
+            onZoneOnlyToggle={() => setZoneOnly((v) => !v)}
             onLocate={locate}
             located={userPos != null}
             menu={mapMenu}
@@ -579,6 +598,7 @@ export default function App() {
         <Sidebar
           tab={tab}
           onTabChange={changeTab}
+          panelOpen={panelOpen}
           count={displayedFeatures.length}
           total={total}
           filterText={filterText}

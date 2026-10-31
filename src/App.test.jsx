@@ -70,7 +70,7 @@ const allData = {
     },
     {
       id: 43,
-      geometry: { coordinates: [6.4, 45.8] },
+      geometry: { coordinates: [8.5, 44.2] }, // HORS de la bbox visible (6.0,45.5,7.0,46.0)
       properties: {
         nom: "Refuge du Goûter",
         type: { id: 10, valeur: "refuge gardé" },
@@ -212,11 +212,11 @@ describe("App (intégration, fetch mocké)", () => {
     expect(map.getAttribute("data-hillshade")).toBe("false");
   });
 
-  it("les contrôles flottants de la carte sont présents (fonds, zone, position, filtres)", async () => {
+  it("les contrôles flottants de la carte sont présents (fonds, interrupteur zone, position, filtres)", async () => {
     render(<App />);
     await screen.findByText("Refuge Test");
     expect(screen.getByLabelText("Fond de carte")).toBeInTheDocument();
-    expect(screen.getByLabelText("Zone visible")).toBeInTheDocument();
+    expect(screen.getByLabelText("Limiter à la zone visible")).toBeInTheDocument();
     expect(screen.getByLabelText("Autour de moi")).toBeInTheDocument();
     expect(screen.getByLabelText("Filtres")).toBeInTheDocument();
   });
@@ -410,6 +410,30 @@ describe("App (intégration, fetch mocké)", () => {
     await screen.findByText("Refuge Test");
     fireEvent.click(screen.getAllByTitle(/Connexion \/ compte/)[0]); // bouton 👤 du header
     expect(await screen.findByText(/non configuré/i)).toBeInTheDocument();
+  });
+
+  it("l'interrupteur zone (loupe) limite la liste à la bbox visible", async () => {
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    fireEvent.click(document.getElementById("tab-recherche"));
+    fireEvent.click(screen.getByRole("button", { name: /Rechercher/i }));
+    await screen.findByText("Cabane du Lac"); // id 42, dans la bbox
+    expect(screen.getByText("Refuge du Goûter")).toBeInTheDocument(); // id 43, hors bbox
+    // activer l'interrupteur zone
+    fireEvent.click(screen.getAllByLabelText("Limiter à la zone visible")[0]);
+    await waitFor(() => expect(screen.queryByText("Refuge du Goûter")).not.toBeInTheDocument());
+    expect(screen.getByText("Cabane du Lac")).toBeInTheDocument();
+  });
+
+  it("le panneau du bas est replié par défaut et se déplie au clic sur un onglet", async () => {
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    expect(document.getElementById("sidebar").className).not.toContain("open");
+    fireEvent.click(document.getElementById("tab-recherche"));
+    expect(document.getElementById("sidebar").className).toContain("open");
+    // reclic sur le même onglet -> replie
+    fireEvent.click(document.getElementById("tab-recherche"));
+    expect(document.getElementById("sidebar").className).not.toContain("open");
   });
 
   it("le bouton ✕ efface la recherche et réaffiche la zone", async () => {

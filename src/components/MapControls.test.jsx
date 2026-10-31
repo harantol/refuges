@@ -7,7 +7,8 @@ const makeProps = (overrides = {}) => ({
   onBasemapChange: vi.fn(),
   hillshade: false,
   onHillshadeChange: vi.fn(),
-  onZoneClick: vi.fn(),
+  zoneOnly: false,
+  onZoneOnlyToggle: vi.fn(),
   onLocate: vi.fn(),
   located: false,
   menu: null,
@@ -23,19 +24,22 @@ const makeProps = (overrides = {}) => ({
 });
 
 describe("MapControls (boutons flottants mobile)", () => {
-  it("affiche les 4 boutons : fonds, zone visible (loupe), ma position, filtres", () => {
+  it("affiche les boutons : fonds, interrupteur zone (loupe), ma position, filtres (entonnoir SVG)", () => {
     render(<MapControls {...makeProps()} />);
     expect(screen.getByLabelText("Fond de carte")).toBeInTheDocument();
-    expect(screen.getByLabelText("Zone visible")).toBeInTheDocument();
+    expect(screen.getByLabelText("Limiter à la zone visible")).toBeInTheDocument();
     expect(screen.getByLabelText("Autour de moi")).toBeInTheDocument();
-    expect(screen.getByLabelText("Filtres")).toBeInTheDocument();
+    const filtres = screen.getByLabelText("Filtres");
+    expect(filtres.querySelector("svg")).not.toBeNull(); // icône entonnoir SVG, pas un emoji
   });
 
-  it("la loupe appelle onZoneClick, la cible appelle onLocate", () => {
-    const props = makeProps();
+  it("la loupe est un interrupteur (aria-pressed) qui appelle onZoneOnlyToggle", () => {
+    const props = makeProps({ zoneOnly: false });
     render(<MapControls {...props} />);
-    fireEvent.click(screen.getByLabelText("Zone visible"));
-    expect(props.onZoneClick).toHaveBeenCalled();
+    const loupe = screen.getByLabelText("Limiter à la zone visible");
+    expect(loupe.getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(loupe);
+    expect(props.onZoneOnlyToggle).toHaveBeenCalled();
     fireEvent.click(screen.getByLabelText("Autour de moi"));
     expect(props.onLocate).toHaveBeenCalled();
   });

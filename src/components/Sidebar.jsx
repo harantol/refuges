@@ -5,6 +5,7 @@ import SearchPanel from "./SearchPanel";
 export default function Sidebar({
   tab,
   onTabChange,
+  panelOpen,
   count,
   total,
   filterText,
@@ -26,8 +27,9 @@ export default function Sidebar({
   onShareFavorites,
 }) {
   const listActive = tab === "liste" || tab === "favoris";
+  const cls = [tab === "fiche" ? "fiche-open" : "", panelOpen ? "open" : ""].filter(Boolean).join(" ");
   return (
-    <aside id="sidebar" className={tab === "fiche" ? "fiche-open" : ""}>
+    <aside id="sidebar" className={cls}>
       <div id="sidebar-tabs">
         <button
           id="tab-liste"
