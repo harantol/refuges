@@ -8,9 +8,10 @@ const fiche = {
   properties: {
     nom: "Cabane du Vallon d'Âne",
     type: { id: 7, valeur: "cabane non gardée", icone: "cabane_eau_x" },
-    coord: { alt: 1766, lat: 44.64, long: 5.94 },
+    coord: { alt: 1766 }, // en detail=fiche, lat/long sont retirés du coord
     places: { valeur: 12 },
     etat: { valeur: "ouvert" },
+    date: { creation: "2012-11-28 00:00:00+01" }, // detail=fiche ne garde que la création
     acces: { valeur: "1h de montée. <a href=\"https://exemple.org\">détail</a>" },
     remarque: { valeur: "Vue dominante.<br><b>Cirque</b> génial." },
     info_comp: {
@@ -18,7 +19,6 @@ const fiche = {
       eau: { nom: "Eau à moins de 100m", valeur: "Non" },
       latrines: { nom: "Latrines", valeur: "<b>Inconnu</b>" },
     },
-    lien: "https://www.refuges.info/point/583",
     commentaires: [
       { id: 1, date_photo: "2024-01-01", auteur: "randonneur", texte: "Très <b>sympa</b>", photo: "/photos_points/1-originale.jpeg?123" },
       { id: 2, auteur: "autre", texte: "", photo: "/photos_points/2-originale.jpeg?1774968979" },
@@ -116,6 +116,33 @@ describe("Fiche", () => {
     expect(container.querySelector("img.fiche-icon")?.getAttribute("src")).toBe(
       "https://www.refuges.info/images/icones/cabane_eau_x.png"
     );
+  });
+
+  it("reconstruit lien, lat/long et date création (absents du detail=fiche)", () => {
+    const { container } = renderFiche();
+    // lien reconstruit depuis l'id
+    expect(screen.getByRole("link", { name: /Fiche complète/ })).toHaveAttribute(
+      "href",
+      "https://www.refuges.info/point/583"
+    );
+    // lat/long depuis la géométrie (le <p> contient <b>Lat</b> 44.64, <b>Long</b> 5.94)
+    expect(screen.getByText(/44\.64/)).toBeInTheDocument();
+    expect(screen.getByText(/5\.94/)).toBeInTheDocument();
+    // date de création formatée
+    expect(screen.getByText(/Fiche créée le 28\/11\/2012/)).toBeInTheDocument();
+    expect(container.textContent).not.toContain("Modifié");
+  });
+
+  it("récupère les places depuis info_comp si p.places est absent (detail=fiche)", () => {
+    const f = {
+      id: 9,
+      geometry: { coordinates: [6.0, 45.0] },
+      properties: { nom: "X", info_comp: { places: { nom: "Places", valeur: 8 } } },
+    };
+    render(<Fiche fiche={f} loading={false} favorites={new Set()} onToggleFavorite={() => {}} />);
+    expect(
+      screen.getByText((_, el) => el?.classList?.contains("kv") && el.textContent.includes("Places : 8"))
+    ).toBeInTheDocument();
   });
 
   it("appelle onToggleFavorite avec l'id au clic sur l'étoile", () => {
