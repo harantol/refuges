@@ -22,6 +22,8 @@ const makeProps = (overrides = {}) => ({
   searching: false,
   searchCount: 3,
   searchActive: false,
+  onSharePoint: vi.fn(),
+  onShareFavorites: vi.fn(),
   ...overrides,
 });
 
@@ -56,6 +58,19 @@ describe("Sidebar", () => {
     render(<Sidebar {...makeProps({ tab: "fiche" })} />);
     expect(screen.getByText("Fiche")).toHaveClass("active");
     expect(screen.getByText(/Liste/).closest("button")).not.toHaveClass("active");
+  });
+
+  it("bouton 'copier le lien de la liste' visible uniquement en onglet favoris", () => {
+    const props = makeProps({ tab: "favoris", favorites: new Set([1, 2]) });
+    render(<Sidebar {...props} />);
+    const btn = screen.getByText(/Copier le lien de la liste \(2\)/);
+    fireEvent.click(btn);
+    expect(props.onShareFavorites).toHaveBeenCalled();
+  });
+
+  it("pas de bouton partage favoris hors de l'onglet favoris", () => {
+    render(<Sidebar {...makeProps({ tab: "liste" })} />);
+    expect(screen.queryByText(/Copier le lien de la liste/)).toBeNull();
   });
 
   it("le panneau recherche contient le formulaire", () => {

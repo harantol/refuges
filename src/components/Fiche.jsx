@@ -19,7 +19,7 @@ const equipClass = (v) => {
   return "inconnu";
 };
 
-export default function Fiche({ fiche, loading, userPos, favorites, onToggleFavorite }) {
+export default function Fiche({ fiche, loading, userPos, favorites, onToggleFavorite, onShare }) {
   if (loading) return <div id="fiche-content"><p className="muted">Chargement de la fiche...</p></div>;
   if (!fiche) return <div id="fiche-content"><p className="muted">Cliquez sur un point de la carte pour voir sa fiche.</p></div>;
   if (fiche.error) return <div id="fiche-content"><p className="muted">Erreur : {fiche.error}</p></div>;
@@ -55,6 +55,13 @@ export default function Fiche({ fiche, loading, userPos, favorites, onToggleFavo
         onClick={() => onToggleFavorite(fiche.id)}
       >
         {favorites?.has(fiche.id) ? "★" : "☆"}
+      </button>
+      <button
+        className="fav-btn big"
+        title="Copier le lien de partage de ce point (#point=id)"
+        onClick={() => onShare?.(fiche.id)}
+      >
+        🔗
       </button>
       <h2>
         {iconUrl(fiche) && <img className="fiche-icon" src={iconUrl(fiche)} alt="" />}

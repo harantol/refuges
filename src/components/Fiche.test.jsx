@@ -145,6 +145,13 @@ describe("Fiche", () => {
     ).toBeInTheDocument();
   });
 
+  it("le bouton 🔗 appelle onShare avec l'id du point", () => {
+    const onShare = vi.fn();
+    renderFiche({ onShare });
+    fireEvent.click(screen.getByTitle(/Copier le lien de partage/));
+    expect(onShare).toHaveBeenCalledWith(583);
+  });
+
   it("appelle onToggleFavorite avec l'id au clic sur l'étoile", () => {
     const onToggleFavorite = vi.fn();
     renderFiche({ onToggleFavorite });

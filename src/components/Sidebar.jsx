@@ -22,6 +22,8 @@ export default function Sidebar({
   searching,
   searchCount,
   searchActive,
+  onSharePoint,
+  onShareFavorites,
 }) {
   const listActive = tab === "liste" || tab === "favoris";
   return (
@@ -65,6 +67,11 @@ export default function Sidebar({
             </button>
           </div>
         )}
+        {tab === "favoris" && (
+          <button id="btn-share-favoris" className="share-btn" onClick={onShareFavorites}>
+            🔗 Copier le lien de la liste ({favorites.size})
+          </button>
+        )}
         <PointList
           features={features}
           filterText={filterText}
@@ -91,6 +98,7 @@ export default function Sidebar({
           userPos={userPos}
           favorites={favorites}
           onToggleFavorite={onToggleFavorite}
+          onShare={onSharePoint}
         />
       </div>
     </aside>
