@@ -67,11 +67,6 @@ export default function Sidebar({
             </button>
           </div>
         )}
-        {tab === "favoris" && (
-          <button id="btn-share-favoris" className="share-btn" onClick={onShareFavorites}>
-            🔗 Copier le lien de la liste ({favorites.size})
-          </button>
-        )}
         <PointList
           features={features}
           filterText={filterText}
@@ -81,6 +76,8 @@ export default function Sidebar({
           userPos={userPos}
           favorites={favorites}
           onToggleFavorite={onToggleFavorite}
+          showShareFavorites={tab === "favoris"}
+          onShareFavorites={onShareFavorites}
         />
       </div>
       <div id="panel-recherche" className={tab === "recherche" ? "panel active" : "panel"}>
