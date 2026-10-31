@@ -150,8 +150,16 @@ beforeEach(() => {
   }
   vi.stubGlobal(
     "fetch",
-    vi.fn(async (url) => {
-      const json = async (data) => ({ ok: true, status: 200, json: async () => data });
+    vi.fn(async (url, opts = {}) => {
+      const json = async (data, status = 200) => ({ ok: status < 400, status, json: async () => data });
+      // cloud Supabase (tests de session)
+      if (String(url).startsWith("https://test.supabase.co")) {
+        if (url.includes("/auth/v1/user")) return json({ id: "u1", email: "a@b.c" });
+        if (url.includes("/rest/v1/favoris") && opts.method === "DELETE") return { ok: true, status: 204, json: async () => null };
+        if (url.includes("/rest/v1/favoris") && opts.method === "POST") return json({}, 201);
+        if (url.includes("/rest/v1/favoris")) return json([{ point_id: 42 }]);
+        return json({});
+      }
       if (url.includes("/api/polygones")) return json(massifsData);
       if (url.includes("/api/massif")) return json(massifData);
       if (url.includes("detail=fiche")) return json(ficheData);
@@ -166,6 +174,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
 });
 
 describe("App (intégration, fetch mocké)", () => {
@@ -375,6 +384,32 @@ describe("App (intégration, fetch mocké)", () => {
     await screen.findByText(/2000 m/);
     fireEvent.click(screen.getByTitle(/Copier le lien de partage/));
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(expect.stringContaining("#point=1")));
+  });
+
+  it("au chargement avec une session cloud, merge les favoris local + cloud", async () => {
+    vi.stubEnv("VITE_SUPABASE_URL", "https://test.supabase.co");
+    vi.stubEnv("VITE_SUPABASE_ANON_KEY", "anon");
+    localStorage.setItem("cloud-auth-token", "tok");
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    // le favori cloud (42) est mergé -> compteur Favoris = 1
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /Favoris/ }).textContent).toContain("(1)")
+    );
+    // appel REST avec le Bearer token
+    const cloudCall = fetch.mock.calls.find(
+      ([u, o]) => String(u).includes("test.supabase.co/rest/v1/favoris") && (!o || !o.method || o.method === "GET")
+    );
+    expect(cloudCall).toBeTruthy();
+    expect(cloudCall[1].headers.Authorization).toBe("Bearer tok");
+    expect(JSON.parse(localStorage.getItem("refuges-favoris"))).toContain(42);
+  });
+
+  it("le bouton 👤 ouvre le panneau compte", async () => {
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    fireEvent.click(screen.getAllByTitle(/Connexion \/ compte/)[0]); // bouton 👤 du header
+    expect(await screen.findByText(/non configuré/i)).toBeInTheDocument();
   });
 
   it("le bouton ✕ efface la recherche et réaffiche la zone", async () => {

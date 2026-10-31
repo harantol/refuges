@@ -1,5 +1,6 @@
 import TypeFilters from "./TypeFilters";
 import IgnKeyForm from "./IgnKeyForm";
+import AuthPanel from "./AuthPanel";
 import { BASEMAPS } from "../basemaps";
 
 export default function Header({
@@ -22,6 +23,14 @@ export default function Header({
   uncheckedTypes,
   onToggleType,
   onIgnKeySave,
+  user,
+  accountOpen,
+  onAccountToggle,
+  authBusy,
+  authError,
+  onLogin,
+  onSignup,
+  onLogout,
 }) {
   return (
     <header id="topbar">
@@ -87,6 +96,28 @@ export default function Header({
           <option value={365}>Modifié depuis 1 an</option>
         </select>
         <span id="status">{status}</span>
+        <div className="account-wrap">
+          <button
+            id="btn-account"
+            className={accountOpen ? "active" : ""}
+            title={user ? `Connecté : ${user.email} — cliquez pour vous déconnecter` : "Connexion / compte (synchronise vos favoris)"}
+            onClick={onAccountToggle}
+          >
+            👤
+          </button>
+          {accountOpen && (
+            <div className="account-dropdown">
+              <AuthPanel
+                user={user}
+                busy={authBusy}
+                error={authError}
+                onLogin={onLogin}
+                onSignup={onSignup}
+                onLogout={onLogout}
+              />
+            </div>
+          )}
+        </div>
       </div>
       <TypeFilters allTypes={allTypes} typeCounts={typeCounts} uncheckedTypes={uncheckedTypes} onToggle={onToggleType} />
     </header>

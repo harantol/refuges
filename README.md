@@ -18,6 +18,30 @@ Site web en **React 18 + Vite + react-leaflet** qui interroge l'[API publique de
 - Recherche de massif par autocomplétion (`GET /api/polygones?type_polygone=1`)
 - Favicon SVG personnalisé
 
+## Comptes & synchro cloud des favoris (Supabase)
+
+Les favoris sont d'abord en `localStorage` ; avec un **compte**, ils sont synchronisés
+via Supabase (REST pur, auth email + mot de passe). Bouton 👤 dans le header (desktop)
+ou dans les contrôles flottants (mobile).
+
+1. Créez un projet gratuit sur [supabase.com](https://supabase.com), activez l'email auth
+2. Dans l'éditeur SQL, créez la table :
+```sql
+create table favoris (
+  user_id uuid references auth.users not null,
+  point_id int not null,
+  primary key (user_id, point_id)
+);
+alter table favoris enable row level security;
+create policy "own" on favoris for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+```
+3. Configurez le front (clé **anon publique**, par design) : variables d'env au build
+   `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` (voir `.env.example`), ou
+   `localStorage["supabase-url"]` / `["supabase-anon-key"]` dans la console.
+
+Sans config, l'app fonctionne en mode local (localStorage seul).
+
 ## Tests & CI
 
 - `npm test` : **95 tests** (Vitest + jsdom + Testing Library) — unitaires (api, geo, utils, types), composants (Header, Sidebar, PointList, Fiche, SearchPanel, TypeFilters, SafeHtml, Lightbox) et intégration App (fetch mocké)

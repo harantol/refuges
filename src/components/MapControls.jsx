@@ -1,5 +1,6 @@
 import TypeFilters from "./TypeFilters";
 import IgnKeyForm from "./IgnKeyForm";
+import AuthPanel from "./AuthPanel";
 import { BASEMAPS } from "../basemaps";
 
 // Boutons flottants sur la carte (visibles uniquement sur mobile, cf. CSS) :
@@ -21,6 +22,12 @@ export default function MapControls({
   recentDays,
   onRecentChange,
   onIgnKeySave,
+  user,
+  authBusy,
+  authError,
+  onLogin,
+  onSignup,
+  onLogout,
 }) {
   return (
     <div id="map-controls">
@@ -51,6 +58,27 @@ export default function MapControls({
       >
         ⚙️
       </button>
+      <button
+        className={menu === "account" ? "active" : ""}
+        title={user ? `Compte : ${user.email}` : "Connexion / compte (sync des favoris)"}
+        aria-label="Compte"
+        onClick={() => onMenuToggle("account")}
+      >
+        👤
+      </button>
+
+      {menu === "account" && (
+        <div className="map-menu" role="dialog" aria-label="Compte">
+          <AuthPanel
+            user={user}
+            busy={authBusy}
+            error={authError}
+            onLogin={onLogin}
+            onSignup={onSignup}
+            onLogout={onLogout}
+          />
+        </div>
+      )}
 
       {menu === "basemap" && (
         <div className="map-menu" role="dialog" aria-label="Choix du fond de carte">
