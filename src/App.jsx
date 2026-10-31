@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Header from "./components/Header";
 import MapView from "./components/MapView";
 import Sidebar from "./components/Sidebar";
-import { fetchZone, fetchMassifPoints, fetchPointsByIds, fetchFiche, fetchMassifs } from "./api";
+import { fetchZone, fetchMassifPoints, fetchPointsByIds, fetchFiche, fetchMassifs, fetchAllPoints } from "./api";
 
 const FAVORIS_KEY = "refuges-favoris";
 
@@ -32,6 +32,11 @@ export default function App() {
   const [userPos, setUserPos] = useState(null);
   const [favorites, setFavorites] = useState(loadFavorites);
   const [recentDays, setRecentDays] = useState(0);
+  const [massifQuery, setMassifQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [searchResults, setSearchResults] = useState(null);
+  const [searching, setSearching] = useState(false);
+  const allPointsRef = useRef(null);
   const fetchToken = useRef(0);
 
   useEffect(() => {
@@ -108,6 +113,60 @@ export default function App() {
     return features.filter((f) => !uncheckedTypes.has(f.properties?.type?.id));
   }, [features, uncheckedTypes]);
 
+  // Recherche par nom dans toute la base (base monde mise en cache session)
+  const runSearch = useCallback(async (q) => {
+    const needle = q.trim().toLowerCase();
+    if (needle.length < 2) {
+      setSearchResults(null);
+      return;
+    }
+    setSearching(true);
+    setStatus("Recherche dans toute la base…");
+    try {
+      if (!allPointsRef.current) {
+        let cached = null;
+        try {
+          cached = sessionStorage.getItem("refuges-all");
+        } catch {
+          /* sessionStorage indisponible */
+        }
+        if (cached) {
+          allPointsRef.current = JSON.parse(cached);
+        } else {
+          const data = await fetchAllPoints();
+          allPointsRef.current = data.features || [];
+          try {
+            sessionStorage.setItem("refuges-all", JSON.stringify(allPointsRef.current));
+          } catch {
+            /* quota dépassé, tant pis */
+          }
+        }
+      }
+      const res = allPointsRef.current
+        .filter((f) => (f.properties?.nom || "").toLowerCase().includes(needle))
+        .slice(0, 300);
+      setSearchResults(res);
+      setStatus(`${res.length} résultat(s) pour « ${q.trim()} »`);
+    } catch (e) {
+      setStatus("Erreur de recherche : " + e.message);
+    } finally {
+      setSearching(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => runSearch(searchInput), 350);
+    return () => clearTimeout(t);
+  }, [searchInput, runSearch]);
+
+  const clearSearch = useCallback(() => {
+    setSearchInput("");
+    setSearchResults(null);
+    setStatus("");
+  }, []);
+
+  const displayedFeatures = searchResults ?? visibleFeatures;
+
   const toggleType = useCallback((id, checked) => {
     setUncheckedTypes((prev) => {
       const next = new Set(prev);
@@ -152,11 +211,19 @@ export default function App() {
     );
   }, []);
 
-  const onMassifChange = useCallback((id) => {
-    if (id) setMode({ type: "massif", id });
-  }, []);
+  const onMassifQueryChange = useCallback(
+    (q) => {
+      setMassifQuery(q);
+      const m = massifs.find((mm) => mm.nom.toLowerCase() === q.trim().toLowerCase());
+      if (m) setMode({ type: "massif", id: String(m.id) });
+    },
+    [massifs]
+  );
 
-  const onZoneClick = useCallback(() => setMode({ type: "zone" }), []);
+  const onZoneClick = useCallback(() => {
+    setMode({ type: "zone" });
+    setMassifQuery("");
+  }, []);
 
   const onNavigate = useCallback((b) => setBbox(b), []);
 
@@ -189,8 +256,8 @@ export default function App() {
     <>
       <Header
         massifs={massifs}
-        massifId={mode.type === "massif" ? mode.id : ""}
-        onMassifChange={onMassifChange}
+        massifQuery={massifQuery}
+        onMassifQueryChange={onMassifQueryChange}
         onZoneClick={onZoneClick}
         zoneActive={mode.type === "zone"}
         basemap={basemap}
@@ -205,15 +272,19 @@ export default function App() {
         onToggleType={toggleType}
       />
       <main>
-        <MapView features={visibleFeatures} onSelect={selectPoint} onNavigate={onNavigate} focus={focus} basemap={basemap} userPos={userPos} />
+        <MapView features={displayedFeatures} onSelect={selectPoint} onNavigate={onNavigate} focus={focus} basemap={basemap} userPos={userPos} />
         <Sidebar
           tab={tab}
           onTabChange={changeTab}
-          count={visibleFeatures.length}
+          count={displayedFeatures.length}
           total={total}
           filterText={filterText}
           onFilterChange={setFilterText}
-          features={visibleFeatures}
+          features={displayedFeatures}
+          searchInput={searchInput}
+          onSearchChange={setSearchInput}
+          onClearSearch={clearSearch}
+          searching={searching}
           selectedId={selectedId}
           onSelect={selectPoint}
           fiche={fiche}

@@ -28,3 +28,7 @@ export const fetchFiche = (id) =>
 
 export const fetchMassifs = () =>
   apiFetch(`${API}/polygones?type_polygone=1&format=geojson&bbox=world`);
+
+// Base complète (détail icone) pour la recherche par nom côté client (~1,6 Mo)
+export const fetchAllPoints = () =>
+  apiFetch(`${API}/bbox?bbox=world&format=geojson&detail=icone&nb_points=all&cache=300`);

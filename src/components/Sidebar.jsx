@@ -16,6 +16,10 @@ export default function Sidebar({
   userPos,
   favorites,
   onToggleFavorite,
+  searchInput,
+  onSearchChange,
+  onClearSearch,
+  searching,
 }) {
   const listActive = tab === "liste" || tab === "favoris";
   return (
@@ -44,6 +48,19 @@ export default function Sidebar({
         </button>
       </div>
       <div id="panel-liste" className={listActive ? "panel active" : "panel"}>
+        <div className="search-bar">
+          <input
+            type="search"
+            id="search-nom"
+            placeholder="Rechercher un refuge par nom (toute la base)…"
+            value={searchInput}
+            onChange={(e) => onSearchChange(e.target.value)}
+          />
+          {searchInput && (
+            <button id="btn-clear-search" title="Effacer la recherche" onClick={onClearSearch}>✕</button>
+          )}
+        </div>
+        {searching && <p className="muted small">Recherche en cours…</p>}
         <PointList
           features={features}
           filterText={filterText}

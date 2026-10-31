@@ -3,8 +3,8 @@ import { BASEMAPS } from "../basemaps";
 
 export default function Header({
   massifs,
-  massifId,
-  onMassifChange,
+  massifQuery,
+  onMassifQueryChange,
   onZoneClick,
   zoneActive,
   basemap,
@@ -22,17 +22,20 @@ export default function Header({
     <header id="topbar">
       <h1>⛺ Explorateur Refuges.info</h1>
       <div className="controls">
-        <select
-          id="massif-select"
-          value={massifId}
-          onChange={(e) => onMassifChange(e.target.value)}
-          title="Rechercher par massif"
-        >
-          <option value="">-- Rechercher par massif --</option>
+        <input
+          id="massif-search"
+          type="search"
+          list="massifs-list"
+          placeholder="Rechercher un massif…"
+          value={massifQuery}
+          onChange={(e) => onMassifQueryChange(e.target.value)}
+          title="Rechercher par massif (autocomplétion)"
+        />
+        <datalist id="massifs-list">
           {massifs.map((m) => (
-            <option key={m.id} value={m.id}>{m.nom}</option>
+            <option key={m.id} value={m.nom} />
           ))}
-        </select>
+        </datalist>
         <button id="btn-zone" className={zoneActive ? "active" : ""} onClick={onZoneClick} title="Revenir à la zone visible sur la carte">
           Zone visible
         </button>
