@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import App from "./App";
+import { TYPE_LABELS } from "./types";
 
 // MapView mocké : on simule juste l'émission initiale du bbox (Leaflet ne tourne pas dans jsdom)
 vi.mock("./components/MapView", async () => {
@@ -227,6 +228,35 @@ describe("App (intégration, fetch mocké)", () => {
     expect(await screen.findByText("P900")).toBeInTheDocument();
     expect(screen.queryByText("P1")).not.toBeInTheDocument();
     expect(fetch).toHaveBeenCalledWith(expect.stringMatching(/bbox=world.*detail=complet/));
+  });
+
+  it("affiche tous les types connus dans les filtres, même absents de la zone courante", async () => {
+    render(<App />);
+    await screen.findByText("Refuge Test"); // zoneData ne contient qu'un refuge gardé (type 10)
+    const filters = within(document.getElementById("type-filters"));
+    expect(filters.getAllByRole("checkbox").length).toBe(Object.keys(TYPE_LABELS).length);
+    expect(filters.getByLabelText(/cabane non gardée/)).toBeChecked();
+  });
+
+  it("conserve tous les filtres de type (et leur état) après un rechargement", async () => {
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    const filters = within(document.getElementById("type-filters"));
+    // décocher un type absent de la zone courante
+    fireEvent.click(filters.getByLabelText(/cabane non gardée/));
+    expect(filters.getByLabelText(/cabane non gardée/)).not.toBeChecked();
+    // simuler un rechargement (changement du zoom => nouveau chargement via le filtre 'depuis')
+    fireEvent.change(screen.getByTitle(/modifiés récemment/i), { target: { value: "30" } });
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith(expect.stringContaining("depuis=-2592000"))
+    );
+    await waitFor(() =>
+      expect(within(document.getElementById("type-filters")).getAllByRole("checkbox").length).toBe(
+        Object.keys(TYPE_LABELS).length
+      )
+    );
+    // la case existe toujours et reste décochée
+    expect(within(document.getElementById("type-filters")).getByLabelText(/cabane non gardée/)).not.toBeChecked();
   });
 
   it("le bouton ✕ efface la recherche et réaffiche la zone", async () => {

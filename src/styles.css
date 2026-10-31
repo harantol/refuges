@@ -60,6 +60,13 @@ html, body, #root {
 }
 
 #type-filters input { accent-color: #ffd166; }
+#type-filters .type-count {
+  background: #ffffff33;
+  border-radius: 999px;
+  padding: 0 6px;
+  font-size: 0.72rem;
+  opacity: 0.9;
+}
 
 main { flex: 1; display: flex; min-height: 0; }
 

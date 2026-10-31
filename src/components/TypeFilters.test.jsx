@@ -21,6 +21,19 @@ describe("TypeFilters", () => {
     expect(cbs[1]).toBeChecked(); // id 10 actif
   });
 
+  it("affiche le compteur de points par type quand disponible", () => {
+    const allTypes = new Map([
+      [7, "cabane non gardée"],
+      [10, "refuge gardé"],
+    ]);
+    const typeCounts = new Map([[10, 3]]);
+    render(
+      <TypeFilters allTypes={allTypes} typeCounts={typeCounts} uncheckedTypes={new Set()} onToggle={() => {}} />
+    );
+    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByLabelText(/cabane non gardée/)).toBeInTheDocument();
+  });
+
   it("appelle onToggle(id, checked) au changement", () => {
     const allTypes = new Map([
       [7, "cabane non gardée"],
