@@ -36,15 +36,40 @@ export default function Header({
     <header id="topbar">
       <h1>⛺ Explorateur Refuges.info</h1>
       <div className="controls">
-        <input
-          id="massif-search"
-          type="search"
-          list="massifs-list"
-          placeholder="Rechercher un massif…"
-          value={massifQuery}
-          onChange={(e) => onMassifQueryChange(e.target.value)}
-          title="Rechercher par massif (autocomplétion)"
-        />
+        <div className="massif-row">
+          <input
+            id="massif-search"
+            type="search"
+            list="massifs-list"
+            placeholder="Rechercher un massif…"
+            value={massifQuery}
+            onChange={(e) => onMassifQueryChange(e.target.value)}
+            title="Rechercher par massif (autocomplétion)"
+          />
+          <div className="account-wrap">
+            <button
+              id="btn-account"
+              className={accountOpen ? "active" : ""}
+              title={user ? `Connecté : ${user.email} — cliquez pour vous déconnecter` : "Connexion / compte (synchronise vos favoris)"}
+              aria-label="Compte"
+              onClick={onAccountToggle}
+            >
+              👤
+            </button>
+            {accountOpen && (
+              <div className="account-dropdown">
+                <AuthPanel
+                  user={user}
+                  busy={authBusy}
+                  error={authError}
+                  onLogin={onLogin}
+                  onSignup={onSignup}
+                  onLogout={onLogout}
+                />
+              </div>
+            )}
+          </div>
+        </div>
         <datalist id="massifs-list">
           {massifs.map((m) => (
             <option key={m.id} value={m.nom} />
@@ -96,28 +121,6 @@ export default function Header({
           <option value={365}>Modifié depuis 1 an</option>
         </select>
         <span id="status">{status}</span>
-        <div className="account-wrap">
-          <button
-            id="btn-account"
-            className={accountOpen ? "active" : ""}
-            title={user ? `Connecté : ${user.email} — cliquez pour vous déconnecter` : "Connexion / compte (synchronise vos favoris)"}
-            onClick={onAccountToggle}
-          >
-            👤
-          </button>
-          {accountOpen && (
-            <div className="account-dropdown">
-              <AuthPanel
-                user={user}
-                busy={authBusy}
-                error={authError}
-                onLogin={onLogin}
-                onSignup={onSignup}
-                onLogout={onLogout}
-              />
-            </div>
-          )}
-        </div>
       </div>
       <TypeFilters allTypes={allTypes} typeCounts={typeCounts} uncheckedTypes={uncheckedTypes} onToggle={onToggleType} />
     </header>

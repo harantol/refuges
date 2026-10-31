@@ -587,12 +587,6 @@ export default function App() {
             recentDays={recentDays}
             onRecentChange={setRecentDays}
             onIgnKeySave={saveIgnKey}
-            user={user}
-            authBusy={authBusy}
-            authError={authError}
-            onLogin={handleLogin}
-            onSignup={handleSignup}
-            onLogout={handleLogout}
           />
         </div>
         <Sidebar
