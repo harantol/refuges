@@ -119,7 +119,7 @@ export default function Fiche({ fiche, loading, userPos, favorites, onToggleFavo
           <h3>Commentaires ({commentaires.length})</h3>
           {commentaires.map((c) => (
             <div className="comment" key={c.id}>
-              <div className="c-head">{c.date || ""} — {c.auteur || "?"}</div>
+              <div className="c-head">{commentDate(c) || "date inconnue"} — {c.auteur || "?"}</div>
               {c.texte ? <SafeHtml className="text" html={c.texte} /> : null}
             </div>
           ))}

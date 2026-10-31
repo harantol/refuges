@@ -20,8 +20,8 @@ const fiche = {
     },
     lien: "https://www.refuges.info/point/583",
     commentaires: [
-      { id: 1, date: "2024-01-01", auteur: "randonneur", texte: "Très <b>sympa</b>", photo: "/photos_points/1-originale.jpeg?123" },
-      { id: 2, date: "2024-02-01", auteur: "autre", texte: "", photo: "/photos_points/2-originale.jpeg?456" },
+      { id: 1, date_photo: "2024-01-01", auteur: "randonneur", texte: "Très <b>sympa</b>", photo: "/photos_points/1-originale.jpeg?123" },
+      { id: 2, auteur: "autre", texte: "", photo: "/photos_points/2-originale.jpeg?1774968979" },
     ],
   },
 };
@@ -81,18 +81,22 @@ describe("Fiche", () => {
     const overlay = container.querySelector(".lightbox-overlay");
     expect(overlay).not.toBeNull();
     expect(overlay.querySelector("img").getAttribute("src")).toBe(
-      "https://www.refuges.info/photos_points/2-originale.jpeg?456"
+      "https://www.refuges.info/photos_points/2-originale.jpeg?1774968979"
     );
     // fermer avec Échap
     fireEvent.keyDown(window, { key: "Escape" });
     expect(container.querySelector(".lightbox-overlay")).toBeNull();
   });
 
-  it("affiche les commentaires depuis properties.commentaires", () => {
+  it("affiche les commentaires depuis properties.commentaires, avec leur date", () => {
     const { container } = renderFiche();
     expect(container.querySelectorAll(".comment")).toHaveLength(2);
     expect(container.querySelector(".comment .text b")?.textContent).toBe("sympa");
     expect(screen.getByText(/Commentaires \(2\)/)).toBeInTheDocument();
+    // date_photo au format JJ/MM/AAAA
+    expect(screen.getByText(/01\/01\/2024 — randonneur/)).toBeInTheDocument();
+    // date extraite du timestamp de l'URL photo pour le second commentaire
+    expect(screen.getByText(/\d{2}\/\d{2}\/\d{4} — autre/)).toBeInTheDocument();
   });
 
   it("affiche les équipements en pastilles, avant les photos", () => {
