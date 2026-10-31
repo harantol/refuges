@@ -33,7 +33,18 @@ describe("SearchPanel", () => {
       placesMin: 20,
       etat: "ouvert",
       types: null, // tous les types cochés = pas de filtre
+      equip: {},
     });
+  });
+
+  it("envoie les critères équipements (info_comp) tri-état", () => {
+    const onSearch = vi.fn();
+    renderPanel({ onSearch });
+    fireEvent.change(screen.getByLabelText("Cheminée"), { target: { value: "oui" } });
+    fireEvent.change(screen.getByLabelText("Eau à moins de 100 m"), { target: { value: "non" } });
+    fireEvent.click(screen.getByRole("button", { name: /Rechercher/i }));
+    const params = onSearch.mock.calls[0][0];
+    expect(params.equip).toEqual({ cheminee: "oui", eau: "non" });
   });
 
   it("envoie le set de types quand au moins un type est décoché", () => {
@@ -56,6 +67,7 @@ describe("SearchPanel", () => {
     expect(params.altMax).toBeNull();
     expect(params.placesMin).toBeNull();
     expect(params.q).toBe("");
+    expect(params.equip).toEqual({});
   });
 
   it("réinitialise le formulaire et appelle onReset", () => {

@@ -20,3 +20,15 @@ export const TYPE_LABELS = {
   28: "bâtiment à explorer",
   29: "abri naturel / grotte",
 };
+
+// Champs info_comp tri-état (Oui / Non / Inconnu) filtrables en recherche détaillée.
+// Clés telles que renvoyées par l'API geojson (cf. champs_trinaires_points du code source).
+export const INFO_COMP_FIELDS = [
+  { key: "cheminee", label: "Cheminée" },
+  { key: "poele", label: "Poêle" },
+  { key: "bois", label: "Bois à moins de 100 m" },
+  { key: "eau", label: "Eau à moins de 100 m" },
+  { key: "couvertures", label: "Couvertures" },
+  { key: "latrines", label: "Latrines" },
+  { key: "manque_un_mur", label: "Manque un mur" },
+];

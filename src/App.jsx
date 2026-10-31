@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Header from "./components/Header";
 import MapView from "./components/MapView";
 import Sidebar from "./components/Sidebar";
-import { fetchZone, fetchMassifPoints, fetchPointsByIds, fetchFiche, fetchMassifs, fetchAllPoints } from "./api";
+import { fetchZone, fetchMassifPoints, fetchPointsByIds, fetchFiche, fetchMassifs, fetchAllPoints, fetchPointsDetail } from "./api";
 
 const FAVORIS_KEY = "refuges-favoris";
 
@@ -157,6 +157,29 @@ export default function App() {
           res = res.filter((f) =>
             (f.properties?.etat?.valeur || "").toLowerCase().includes(params.etat)
           );
+        // Équipements (info_comp) : absents du détail "simple", on charge le détail
+        // complet uniquement pour les candidats restants, par paquets de 100 ids.
+        const equipEntries = Object.entries(params.equip || {}).filter(
+          ([, v]) => v === "oui" || v === "non"
+        );
+        if (equipEntries.length > 0) {
+          const candidats = res.slice(0, 600);
+          setStatus(`Chargement des détails de ${candidats.length} candidat(s)…`);
+          const details = new Map();
+          for (let i = 0; i < candidats.length; i += 100) {
+            const data = await fetchPointsDetail(candidats.slice(i, i + 100).map((f) => f.id));
+            (data.features || []).forEach((f) => details.set(f.id, f));
+          }
+          res = candidats.filter((f) => {
+            const d = details.get(f.id);
+            if (!d) return false;
+            const ic = d.properties?.info_comp || {};
+            return equipEntries.every(([key, val]) => {
+              const v = String(ic[key]?.valeur ?? "").replace(/<[^>]+>/g, "").trim().toLowerCase();
+              return val === "oui" ? v === "oui" : v === "non";
+            });
+          });
+        }
         res = res.slice(0, 500);
         setSearchResults(res);
         setSearchCount(res.length);

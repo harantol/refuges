@@ -78,6 +78,27 @@ const allData = {
   ],
 };
 
+const detailData = {
+  features: [
+    {
+      id: 42,
+      geometry: { coordinates: [6.3, 45.7] },
+      properties: {
+        nom: "Cabane du Lac",
+        info_comp: { cheminee: { nom: "Cheminée", valeur: "Oui" }, eau: { nom: "Eau", valeur: "<b>Inconnu</b>" } },
+      },
+    },
+    {
+      id: 43,
+      geometry: { coordinates: [6.4, 45.8] },
+      properties: {
+        nom: "Refuge du Goûter",
+        info_comp: { cheminee: { nom: "Cheminée", valeur: "Non" }, eau: { nom: "Eau", valeur: "Oui" } },
+      },
+    },
+  ],
+};
+
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
@@ -88,7 +109,8 @@ beforeEach(() => {
       if (url.includes("/api/polygones")) return json(massifsData);
       if (url.includes("/api/massif")) return json(massifData);
       if (url.includes("detail=fiche")) return json(ficheData);
-      if (url.includes("nb_points=all")) return json(allData);
+      if (url.includes("detail=complet")) return json(detailData);
+      if (url.includes("/api/bbox") && url.includes("nb_points=all")) return json(allData);
       if (url.includes("/api/bbox")) return json(zoneData);
       if (url.includes("/api/point")) return json(zoneData);
       return json({ features: [] });
@@ -142,6 +164,19 @@ describe("App (intégration, fetch mocké)", () => {
     fireEvent.click(screen.getByRole("button", { name: /Rechercher/i }));
     expect(await screen.findByText("Refuge du Goûter")).toBeInTheDocument();
     expect(screen.queryByText("Cabane du Lac")).not.toBeInTheDocument();
+  });
+
+  it("recherche détaillée filtre sur les équipements (info_comp via detail=complet)", async () => {
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    fireEvent.click(screen.getByText("🔎 Recherche"));
+    fireEvent.change(screen.getByLabelText("Cheminée"), { target: { value: "oui" } });
+    fireEvent.click(screen.getByRole("button", { name: /Rechercher/i }));
+    expect(await screen.findByText("Cabane du Lac")).toBeInTheDocument();
+    expect(screen.queryByText("Refuge du Goûter")).not.toBeInTheDocument();
+    // le détail complet a bien été demandé pour les candidats
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("detail=complet"));
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/point?id=42,43"));
   });
 
   it("le bouton ✕ efface la recherche et réaffiche la zone", async () => {

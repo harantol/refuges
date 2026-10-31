@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TYPE_LABELS } from "../types";
+import { TYPE_LABELS, INFO_COMP_FIELDS } from "../types";
 
 const ALL_TYPE_IDS = Object.keys(TYPE_LABELS).map(Number);
 
@@ -15,6 +15,7 @@ export default function SearchPanel({ onSearch, onReset, searching, resultCount 
   const [placesMin, setPlacesMin] = useState("");
   const [etat, setEtat] = useState("");
   const [types, setTypes] = useState(() => new Set(ALL_TYPE_IDS));
+  const [equip, setEquip] = useState({}); // clé info_comp -> "" | "oui" | "non"
 
   const buildParams = () => ({
     q: q.trim(),
@@ -24,7 +25,17 @@ export default function SearchPanel({ onSearch, onReset, searching, resultCount 
     etat,
     // null = tous les types cochés (pas de filtre)
     types: types.size === ALL_TYPE_IDS.length ? null : types,
+    equip,
   });
+
+  const setEquipField = (key, value) => {
+    setEquip((prev) => {
+      const next = { ...prev };
+      if (value) next[key] = value;
+      else delete next[key];
+      return next;
+    });
+  };
 
   const submit = (e) => {
     e.preventDefault();
@@ -47,6 +58,7 @@ export default function SearchPanel({ onSearch, onReset, searching, resultCount 
     setPlacesMin("");
     setEtat("");
     setTypes(new Set(ALL_TYPE_IDS));
+    setEquip({});
     onReset();
   };
 
@@ -120,6 +132,23 @@ export default function SearchPanel({ onSearch, onReset, searching, resultCount 
           <option value="fermé">Fermé</option>
         </select>
       </label>
+
+      <fieldset>
+        <legend>Équipements &amp; confort (métadonnées des fiches)</legend>
+        {INFO_COMP_FIELDS.map((f) => (
+          <label key={f.key} className="full equip-row">
+            {f.label}
+            <select
+              value={equip[f.key] || ""}
+              onChange={(e) => setEquipField(f.key, e.target.value)}
+            >
+              <option value="">Indifférent</option>
+              <option value="oui">Oui</option>
+              <option value="non">Non</option>
+            </select>
+          </label>
+        ))}
+      </fieldset>
 
       <div className="search-actions">
         <button type="submit" className="primary" disabled={searching}>
