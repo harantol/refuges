@@ -25,7 +25,7 @@ export default function Sidebar({
 }) {
   const listActive = tab === "liste" || tab === "favoris";
   return (
-    <aside id="sidebar">
+    <aside id="sidebar" className={tab === "fiche" ? "fiche-open" : ""}>
       <div id="sidebar-tabs">
         <button
           id="tab-liste"
