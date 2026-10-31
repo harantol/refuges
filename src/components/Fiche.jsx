@@ -1,7 +1,7 @@
 import { pointColor } from "../types";
 import { haversineKm } from "../geo";
 
-export default function Fiche({ fiche, loading, userPos }) {
+export default function Fiche({ fiche, loading, userPos, favorites, onToggleFavorite }) {
   if (loading) return <div id="fiche-content"><p className="muted">Chargement de la fiche...</p></div>;
   if (!fiche) return <div id="fiche-content"><p className="muted">Cliquez sur un point de la carte pour voir sa fiche.</p></div>;
   if (fiche.error) return <div id="fiche-content"><p className="muted">Erreur : {fiche.error}</p></div>;
@@ -19,6 +19,13 @@ export default function Fiche({ fiche, loading, userPos }) {
   return (
     <div id="fiche-content">
       <span className="badge" style={{ background: color }}>{p.type?.valeur || ""}</span>
+      <button
+        className={favorites?.has(fiche.id) ? "fav-btn on big" : "fav-btn big"}
+        title={favorites?.has(fiche.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
+        onClick={() => onToggleFavorite(fiche.id)}
+      >
+        {favorites?.has(fiche.id) ? "★" : "☆"}
+      </button>
       <h2>{p.nom || "(sans nom)"}</h2>
       {p.coord && (
         <p className="kv">

@@ -1,7 +1,7 @@
 import { pointColor } from "../types";
 import { haversineKm } from "../geo";
 
-export default function PointList({ features, filterText, onFilterChange, selectedId, onSelect, userPos }) {
+export default function PointList({ features, filterText, onFilterChange, selectedId, onSelect, userPos, favorites, onToggleFavorite }) {
   const q = filterText.trim().toLowerCase();
   const items = features.filter((f) => !q || (f.properties?.nom || "").toLowerCase().includes(q));
 
@@ -33,7 +33,7 @@ export default function PointList({ features, filterText, onFilterChange, select
               onClick={() => onSelect(f.id)}
             >
               <span className="dot" style={{ background: pointColor(f) }}></span>
-              <span>
+              <span className="item-body">
                 <span className="name">{p.nom || "(sans nom)"}</span>
                 <br />
                 <span className="meta">
@@ -44,6 +44,16 @@ export default function PointList({ features, filterText, onFilterChange, select
                   {dist}
                 </span>
               </span>
+              <button
+                className={favorites.has(f.id) ? "fav-btn on" : "fav-btn"}
+                title={favorites.has(f.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite(f.id);
+                }}
+              >
+                {favorites.has(f.id) ? "★" : "☆"}
+              </button>
             </li>
           );
         })}

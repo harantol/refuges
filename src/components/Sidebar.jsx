@@ -14,7 +14,10 @@ export default function Sidebar({
   fiche,
   ficheLoading,
   userPos,
+  favorites,
+  onToggleFavorite,
 }) {
+  const listActive = tab === "liste" || tab === "favoris";
   return (
     <aside id="sidebar">
       <div id="sidebar-tabs">
@@ -26,6 +29,13 @@ export default function Sidebar({
           Liste (<span id="count">{count}</span>)
         </button>
         <button
+          id="tab-favoris"
+          className={tab === "favoris" ? "tab active" : "tab"}
+          onClick={() => onTabChange("favoris")}
+        >
+          ★ Favoris ({favorites.size})
+        </button>
+        <button
           id="tab-fiche"
           className={tab === "fiche" ? "tab active" : "tab"}
           onClick={() => onTabChange("fiche")}
@@ -33,7 +43,7 @@ export default function Sidebar({
           Fiche
         </button>
       </div>
-      <div id="panel-liste" className={tab === "liste" ? "panel active" : "panel"}>
+      <div id="panel-liste" className={listActive ? "panel active" : "panel"}>
         <PointList
           features={features}
           filterText={filterText}
@@ -41,10 +51,18 @@ export default function Sidebar({
           selectedId={selectedId}
           onSelect={onSelect}
           userPos={userPos}
+          favorites={favorites}
+          onToggleFavorite={onToggleFavorite}
         />
       </div>
       <div id="panel-fiche" className={tab === "fiche" ? "panel active" : "panel"}>
-        <Fiche fiche={fiche} loading={ficheLoading} userPos={userPos} />
+        <Fiche
+          fiche={fiche}
+          loading={ficheLoading}
+          userPos={userPos}
+          favorites={favorites}
+          onToggleFavorite={onToggleFavorite}
+        />
       </div>
     </aside>
   );

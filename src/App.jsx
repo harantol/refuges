@@ -2,10 +2,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Header from "./components/Header";
 import MapView from "./components/MapView";
 import Sidebar from "./components/Sidebar";
-import { fetchZone, fetchMassifPoints, fetchFiche, fetchMassifs } from "./api";
+import { fetchZone, fetchMassifPoints, fetchPointsByIds, fetchFiche, fetchMassifs } from "./api";
+
+const FAVORIS_KEY = "refuges-favoris";
+
+function loadFavorites() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(FAVORIS_KEY) || "[]"));
+  } catch {
+    return new Set();
+  }
+}
 
 export default function App() {
-  const [mode, setMode] = useState({ type: "zone" }); // {type:'zone'} | {type:'massif', id:string}
+  const [mode, setMode] = useState({ type: "zone" }); // {type:'zone'} | {type:'massif', id:string} | {type:'favoris'}
   const [bbox, setBbox] = useState(null);
   const [features, setFeatures] = useState([]);
   const [total, setTotal] = useState(0);
@@ -20,6 +30,7 @@ export default function App() {
   const [focus, setFocus] = useState(null);
   const [basemap, setBasemap] = useState("osm");
   const [userPos, setUserPos] = useState(null);
+  const [favorites, setFavorites] = useState(loadFavorites);
   const fetchToken = useRef(0);
 
   useEffect(() => {
@@ -36,6 +47,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (mode.type === "favoris") return; // géré par l'effet dédié ci-dessous
     const token = ++fetchToken.current;
     let promise;
     if (mode.type === "zone") {
@@ -58,6 +70,28 @@ export default function App() {
         setStatus("Erreur de chargement : " + e.message);
       });
   }, [mode, bbox]);
+
+  useEffect(() => {
+    if (mode.type !== "favoris") return;
+    const token = ++fetchToken.current;
+    if (favorites.size === 0) {
+      setFeatures([]);
+      setTotal(0);
+      setStatus("Aucun favori — cliquez sur ☆ dans la liste ou la fiche");
+      return;
+    }
+    setStatus("Chargement des favoris…");
+    fetchPointsByIds([...favorites])
+      .then((data) => {
+        if (token !== fetchToken.current) return;
+        setFeatures(data.features || []);
+        setTotal(data.features?.length ?? 0);
+        setStatus("");
+      })
+      .catch((e) => {
+        if (token === fetchToken.current) setStatus("Erreur de chargement : " + e.message);
+      });
+  }, [mode, favorites]);
 
   const allTypes = useMemo(() => {
     const m = new Map();
@@ -125,6 +159,31 @@ export default function App() {
 
   const onNavigate = useCallback((b) => setBbox(b), []);
 
+  const toggleFavorite = useCallback((id) => {
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      try {
+        localStorage.setItem(FAVORIS_KEY, JSON.stringify([...next]));
+      } catch {
+        /* stockage indisponible */
+      }
+      return next;
+    });
+  }, []);
+
+  const changeTab = useCallback(
+    (t) => {
+      setTab((prev) => {
+        if (t === "favoris") setMode({ type: "favoris" });
+        else if (prev === "favoris" && t === "liste") setMode({ type: "zone" });
+        return t;
+      });
+    },
+    []
+  );
+
   return (
     <>
       <Header
@@ -146,7 +205,7 @@ export default function App() {
         <MapView features={visibleFeatures} onSelect={selectPoint} onNavigate={onNavigate} focus={focus} basemap={basemap} userPos={userPos} />
         <Sidebar
           tab={tab}
-          onTabChange={setTab}
+          onTabChange={changeTab}
           count={visibleFeatures.length}
           total={total}
           filterText={filterText}
@@ -157,6 +216,8 @@ export default function App() {
           fiche={fiche}
           ficheLoading={ficheLoading}
           userPos={userPos}
+          favorites={favorites}
+          onToggleFavorite={toggleFavorite}
         />
       </main>
       <footer id="credits">
