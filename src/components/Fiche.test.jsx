@@ -66,10 +66,21 @@ describe("Fiche", () => {
     const imgs = container.querySelectorAll(".photo-gallery img");
     expect(imgs).toHaveLength(2);
     expect(imgs[0].getAttribute("src")).toBe("https://www.refuges.info/photos_points/1-originale.jpeg?123");
-    expect(container.querySelector(".photo-gallery a")?.getAttribute("href")).toBe(
-      "https://www.refuges.info/photos_points/1-originale.jpeg?123"
-    );
     expect(screen.getByText(/Photos \(2\)/)).toBeInTheDocument();
+  });
+
+  it("clic sur une miniature ouvre le diaporama en overlay (pas de nouvel onglet)", () => {
+    const { container } = renderFiche();
+    expect(container.querySelector(".lightbox-overlay")).toBeNull();
+    fireEvent.click(container.querySelectorAll(".photo-gallery .thumb")[1]);
+    const overlay = container.querySelector(".lightbox-overlay");
+    expect(overlay).not.toBeNull();
+    expect(overlay.querySelector("img").getAttribute("src")).toBe(
+      "https://www.refuges.info/photos_points/2-originale.jpeg?456"
+    );
+    // fermer avec Échap
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(container.querySelector(".lightbox-overlay")).toBeNull();
   });
 
   it("affiche les commentaires depuis properties.commentaires", () => {
