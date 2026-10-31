@@ -10,6 +10,15 @@ const API_ORIGIN = "https://www.refuges.info";
 export const absUrl = (path) =>
   !path ? "" : path.startsWith("http") ? path : API_ORIGIN + path;
 
+// Normalise une valeur info_comp ("Oui", "Non", "<b>Inconnu</b>", nombre...)
+const equipText = (v) => String(v ?? "").replace(/<[^>]+>/g, "").trim();
+const equipClass = (v) => {
+  const s = equipText(v).toLowerCase();
+  if (s === "oui") return "oui";
+  if (s === "non") return "non";
+  return "inconnu";
+};
+
 export default function Fiche({ fiche, loading, userPos, favorites, onToggleFavorite }) {
   if (loading) return <div id="fiche-content"><p className="muted">Chargement de la fiche...</p></div>;
   if (!fiche) return <div id="fiche-content"><p className="muted">Cliquez sur un point de la carte pour voir sa fiche.</p></div>;
@@ -51,6 +60,23 @@ export default function Fiche({ fiche, loading, userPos, favorites, onToggleFavo
       {p.places?.valeur != null && <p className="kv"><b>Places :</b> {p.places.valeur}</p>}
       {p.proprio?.valeur && <p className="kv"><b>{p.proprio.nom} :</b> {p.proprio.valeur}</p>}
 
+      {infoComp.length > 0 && (
+        <>
+          <h3>Équipements</h3>
+          <ul className="equip-grid">
+            {infoComp.map((i, idx) => (
+              <li key={idx} className={equipClass(i.valeur)}>
+                <span className="equip-label">{i.nom}</span>
+                <span className="equip-val">{equipText(i.valeur) || "?"}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {p.acces?.valeur && (<><h3>Accès</h3><SafeHtml className="text" html={p.acces.valeur} /></>)}
+      {p.remarque?.valeur && (<><h3>Remarques</h3><SafeHtml className="text" html={p.remarque.valeur} /></>)}
+
       {photos.length > 0 && (
         <>
           <h3>Photos ({photos.length})</h3>
@@ -77,16 +103,6 @@ export default function Fiche({ fiche, loading, userPos, favorites, onToggleFavo
         />
       )}
 
-      {p.acces?.valeur && (<><h3>Accès</h3><SafeHtml className="text" html={p.acces.valeur} /></>)}
-      {p.remarque?.valeur && (<><h3>Remarques</h3><SafeHtml className="text" html={p.remarque.valeur} /></>)}
-      {infoComp.length > 0 && (
-        <>
-          <h3>Équipements</h3>
-          {infoComp.map((i, idx) => (
-            <p className="kv" key={idx}><b>{i.nom} :</b> {String(i.valeur)}</p>
-          ))}
-        </>
-      )}
       {p.date && (
         <>
           <h3>Dates</h3>
