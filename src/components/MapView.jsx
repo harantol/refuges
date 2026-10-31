@@ -6,19 +6,20 @@ import { pointColor, iconUrl } from "../types";
 import { escapeHtml } from "../utils";
 import { BASEMAPS, HILLSHADE } from "../basemaps";
 
-function makeIcon(feature) {
+export function makeIcon(feature) {
   const color = pointColor(feature);
   const nom = escapeHtml(feature.properties?.nom || "");
   const icon = iconUrl(feature);
-  // Icône refuges.info si disponible, sinon pastille colorée
+  // Icône refuges.info si disponible, sinon pastille colorée.
+  // Le label est EN-DESSOUS de l'icône (colonne flex) pour ne pas la recouvrir.
   const picto = icon
     ? `<img class="marker-icon" src="${icon}" alt="" draggable="false" />`
     : `<span class="dot" style="background:${color}"></span>`;
   return L.divIcon({
-    className: "",
+    className: "marker-wrap",
     html: `${picto}<span class="marker-label" style="border-color:${color};color:${color}">${nom}</span>`,
-    iconSize: icon ? [28, 28] : [16, 16],
-    iconAnchor: icon ? [14, 26] : [8, 8],
+    iconSize: null,
+    iconAnchor: icon ? [14, 14] : [8, 8], // ancré au centre de l'icône
   });
 }
 
@@ -54,7 +55,7 @@ const userIcon = L.divIcon({
 function FocusController({ focus, userPos }) {
   const map = useMap();
   useEffect(() => {
-    if (focus) map.setView(focus, Math.max(map.getZoom(), 13));
+    if (focus) map.setView(focus, Math.max(map.getZoom(), 14)); // zoom 14 = marqueurs déclusterisés (icônes visibles)
   }, [focus, map]);
   useEffect(() => {
     if (userPos) map.setView(userPos, Math.max(map.getZoom(), 12));
@@ -94,7 +95,7 @@ export default function MapView({ features, onSelect, onNavigate, focus, basemap
       )}
       <MapEvents onNavigate={onNavigate} />
       <FocusController focus={focus} userPos={userPos} />
-      <MarkerClusterGroup showCoverageOnHover={false}>
+      <MarkerClusterGroup showCoverageOnHover={false} disableClusteringAtZoom={14}>
         {markers.map((m) => (
           <Marker
             key={m.id}
