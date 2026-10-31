@@ -1,3 +1,4 @@
+import { useState } from "react";
 import TypeFilters from "./TypeFilters";
 import { BASEMAPS } from "../basemaps";
 
@@ -20,7 +21,10 @@ export default function Header({
   typeCounts,
   uncheckedTypes,
   onToggleType,
+  onIgnKeySave,
 }) {
+  const [ignKey, setIgnKey] = useState("");
+  const ignNoKey = Boolean(BASEMAPS.ign.noKey);
   return (
     <header id="topbar">
       <h1>⛺ Explorateur Refuges.info</h1>
@@ -63,6 +67,24 @@ export default function Header({
           />
           Pentes
         </label>
+        {basemap === "ign" && ignNoKey && (
+          <span className="ign-key-form" title="Créez votre clé gratuite sur geoservices.ign.fr (compte requis)">
+            <input
+              id="ign-key-input"
+              type="password"
+              placeholder="Clé API IGN…"
+              value={ignKey}
+              onChange={(e) => setIgnKey(e.target.value)}
+            />
+            <button
+              id="ign-key-save"
+              disabled={!ignKey.trim()}
+              onClick={() => onIgnKeySave?.(ignKey.trim())}
+            >
+              Enregistrer
+            </button>
+          </span>
+        )}
         <button
           id="btn-locate"
           className={located ? "active" : ""}

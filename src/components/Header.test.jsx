@@ -21,6 +21,7 @@ const makeProps = (overrides = {}) => ({
   typeCounts: new Map([[10, 2]]),
   uncheckedTypes: new Set(),
   onToggleType: vi.fn(),
+  onIgnKeySave: vi.fn(),
   ...overrides,
 });
 
@@ -68,6 +69,20 @@ describe("Header", () => {
     expect(cb).not.toBeChecked();
     fireEvent.click(cb);
     expect(props.onHillshadeChange).toHaveBeenCalledWith(true);
+  });
+
+  it("affiche le formulaire de clé quand IGN Top 25 est choisi sans clé, et appelle onIgnKeySave", () => {
+    const props = makeProps({ basemap: "ign" });
+    render(<Header {...props} />);
+    const input = screen.getByPlaceholderText(/Clé API IGN/);
+    fireEvent.change(input, { target: { value: "ma-cle-123" } });
+    fireEvent.click(screen.getByText("Enregistrer"));
+    expect(props.onIgnKeySave).toHaveBeenCalledWith("ma-cle-123");
+  });
+
+  it("pas de formulaire de clé sur un autre fond", () => {
+    render(<Header {...makeProps({ basemap: "osm" })} />);
+    expect(screen.queryByPlaceholderText(/Clé API IGN/)).toBeNull();
   });
 
   it("affiche les filtres de type avec compteur", () => {
