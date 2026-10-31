@@ -13,7 +13,8 @@ export default function Fiche({ fiche, loading, userPos, favorites, onToggleFavo
   let distTxt = "";
   if (userPos != null && p.coord?.lat != null && p.coord?.long != null) {
     const d = haversineKm(userPos, [p.coord.lat, p.coord.long]);
-    distTxt = ` · ${d < 10 ? d.toFixed(1) : Math.round(d) + " km"} de vous`;
+    const km = d < 10 ? d.toFixed(1) : String(Math.round(d));
+    distTxt = ` · ${km} km de vous`;
   }
 
   return (

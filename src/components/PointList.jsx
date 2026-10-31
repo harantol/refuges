@@ -23,7 +23,8 @@ export default function PointList({ features, filterText, onFilterChange, select
           let dist = "";
           if (userPos != null) {
             const d = haversineKm(userPos, [f.geometry.coordinates[1], f.geometry.coordinates[0]]);
-            dist = ` · ${d < 10 ? d.toFixed(1) : Math.round(d) + " km"}`;
+            const km = d < 10 ? d.toFixed(1) : String(Math.round(d));
+            dist = ` · ${km} km`;
           }
           return (
             <li
