@@ -1,52 +1,12 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Explorateur Refuges.info</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <header id="topbar">
-    <h1>&#9968; Explorateur Refuges.info</h1>
-    <div class="controls">
-      <select id="massif-select" title="Rechercher par massif">
-        <option value="">-- Rechercher par massif --</option>
-      </select>
-      <button id="btn-zone" class="active" title="Revenir à la zone visible sur la carte">Zone visible</button>
-      <span id="status"></span>
-    </div>
-    <div id="type-filters" aria-label="Filtrer par type de point"></div>
-  </header>
-
-  <main>
-    <div id="map"></div>
-    <aside id="sidebar">
-      <div id="sidebar-tabs">
-        <button id="tab-liste" class="tab active">Liste (<span id="count">0</span>)</button>
-        <button id="tab-fiche" class="tab">Fiche</button>
-      </div>
-      <div id="panel-liste" class="panel active">
-        <input type="search" id="filter-text" placeholder="Filtrer par nom...">
-        <ul id="point-list"></ul>
-      </div>
-      <div id="panel-fiche" class="panel">
-        <div id="fiche-content"><p class="muted">Cliquez sur un point de la carte pour voir sa fiche.</p></div>
-      </div>
-    </aside>
-  </main>
-
-  <footer id="credits">
-    Données <a href="https://www.refuges.info" target="_blank" rel="noopener">refuges.info</a> (CC BY-SA 2.0) &middot; Carte &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL)
-  </footer>
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-  <script src="app.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Explorateur Refuges.info</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
