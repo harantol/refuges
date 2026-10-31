@@ -74,6 +74,25 @@ html, body, #root {
   color: #fff;
 }
 #hillshade-toggle input { accent-color: #ffd166; }
+
+.ign-key-form { display: inline-flex; gap: 6px; align-items: center; }
+.ign-key-form input {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  min-width: 200px;
+}
+.ign-key-form button {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  background: #ffd166;
+  color: #1f4e3d;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ign-key-form button:disabled { opacity: 0.5; cursor: default; }
 #type-filters .type-count {
   background: #ffffff33;
   border-radius: 999px;

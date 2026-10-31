@@ -323,8 +323,23 @@ export default function App() {
 
   const changeBasemap = useCallback((b) => {
     setBasemap(b);
-    if (b === "ign" && !IGN_HAS_KEY) {
-      setStatus("IGN Top 25 : clé API requise — créez-la sur geoservices.ign.fr (VITE_IGN_API_KEY ou localStorage ign-api-key). Le Plan IGN v2 est dispo sans clé.");
+    if (b === "ign") {
+      setStatus("IGN Top 25 : clé partagée ign_scan_ws utilisée par défaut — collez votre clé perso ci-dessus pour un quota dédié.");
+    }
+  }, []);
+
+  // Enregistre la clé IGN dans localStorage puis recharge (basemaps.js la relit au chargement)
+  const saveIgnKey = useCallback((key) => {
+    try {
+      localStorage.setItem("ign-api-key", key);
+    } catch {
+      /* stockage indisponible */
+    }
+    setStatus("Clé IGN enregistrée, rechargement…");
+    try {
+      location.reload();
+    } catch {
+      /* jsdom */
     }
   }, []);
 
@@ -418,6 +433,7 @@ export default function App() {
         onBasemapChange={changeBasemap}
         hillshade={hillshade}
         onHillshadeChange={setHillshade}
+        onIgnKeySave={saveIgnKey}
         onLocate={locate}
         located={userPos != null}
         recentDays={recentDays}

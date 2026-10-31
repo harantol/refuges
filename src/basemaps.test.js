@@ -13,16 +13,26 @@ describe("basemaps", () => {
     expect(BASEMAPS.planign.url).toContain("{z}");
   });
 
-  it("IGN Top 25 embarque la clé quand présente, sinon marqué noKey", () => {
+  it("BDUNI J1 (fond vectoriel officiel) est open data sans clé", () => {
+    expect(BASEMAPS.bduni.url).toContain("GEOGRAPHICALGRIDSYSTEMS.MAPS.BDUNI.J1");
+    expect(BASEMAPS.bduni.url).not.toContain("key=");
+    expect(BASEMAPS.bduni.url).toContain("data.geopf.fr/wmts"); // endpoint public
+  });
+
+  it("IGN Top 25 passe par private/wmts avec apikey (clé partagée ign_scan_ws par défaut)", () => {
     expect(BASEMAPS.ign.url).toContain("GEOGRAPHICALGRIDSYSTEMS.MAPS");
-    expect(BASEMAPS.ign.url).toContain("key=");
+    expect(BASEMAPS.ign.url).toContain("private/wmts");
+    expect(BASEMAPS.ign.url).toContain("apikey=");
+    // clé partagée de secours -> toujours disponible, une clé perso prend le dessus
     expect(BASEMAPS.ign.noKey).toBe(!IGN_HAS_KEY);
+    expect(BASEMAPS.ign.url).toMatch(/apikey=(ign_scan_ws|\S+)/);
     expect(BASEMAPS.ign.label).toMatch(/Top 25/);
   });
 
-  it("hillshade Esri configuré", () => {
-    expect(HILLSHADE.url).toContain("World_Hillshade");
-    expect(HILLSHADE.url).toContain("{z}/{y}/{x}");
+  it("la couche 'pentes' est la couche officielle IGN SLOPES.MOUNTAIN, sans clé", () => {
+    expect(HILLSHADE.url).toContain("GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN");
+    expect(HILLSHADE.url).not.toContain("key=");
+    expect(HILLSHADE.url).toContain("{z}");
     expect(HILLSHADE.opacity).toBeGreaterThan(0);
   });
 });
