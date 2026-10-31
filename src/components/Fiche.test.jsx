@@ -13,6 +13,11 @@ const fiche = {
     etat: { valeur: "ouvert" },
     acces: { valeur: "1h de montée. <a href=\"https://exemple.org\">détail</a>" },
     remarque: { valeur: "Vue dominante.<br><b>Cirque</b> génial." },
+    info_comp: {
+      cheminee: { nom: "Cheminée", valeur: "Oui" },
+      eau: { nom: "Eau à moins de 100m", valeur: "Non" },
+      latrines: { nom: "Latrines", valeur: "<b>Inconnu</b>" },
+    },
     lien: "https://www.refuges.info/point/583",
     commentaires: [
       { id: 1, date: "2024-01-01", auteur: "randonneur", texte: "Très <b>sympa</b>", photo: "/photos_points/1-originale.jpeg?123" },
@@ -88,6 +93,18 @@ describe("Fiche", () => {
     expect(container.querySelectorAll(".comment")).toHaveLength(2);
     expect(container.querySelector(".comment .text b")?.textContent).toBe("sympa");
     expect(screen.getByText(/Commentaires \(2\)/)).toBeInTheDocument();
+  });
+
+  it("affiche les équipements en pastilles, avant les photos", () => {
+    const { container } = renderFiche();
+    const h3s = [...container.querySelectorAll("#fiche-content h3")].map((h) => h.textContent);
+    expect(h3s).toContain("Équipements");
+    expect(h3s.indexOf("Équipements")).toBeLessThan(h3s.findIndex((t) => t.startsWith("Photos")));
+    const items = [...container.querySelectorAll(".equip-grid li")];
+    expect(items.map((li) => li.className)).toEqual(["oui", "non", "inconnu"]);
+    expect(items[0].querySelector(".equip-val")?.textContent).toBe("Oui");
+    // les balises HTML de la valeur sont retirées
+    expect(items[2].querySelector(".equip-val")?.textContent).toBe("Inconnu");
   });
 
   it("appelle onToggleFavorite avec l'id au clic sur l'étoile", () => {
