@@ -44,10 +44,9 @@ const ficheData = {
       geometry: { coordinates: [6.1, 45.9] },
       properties: {
         nom: "Refuge Test",
-        type: { id: 10, valeur: "refuge gardé" },
-        coord: { alt: 2000, lat: 45.9, long: 6.1 },
+        type: { valeur: "refuge gardé" }, // detail=fiche réel : pas d'id dans type
+        coord: { alt: 2000 },
       },
-      comments: [],
     },
   ],
 };
@@ -173,6 +172,28 @@ describe("App (intégration, fetch mocké)", () => {
     fireEvent.click(await screen.findByText("Refuge Test"));
     expect(await screen.findByText(/2000 m/)).toBeInTheDocument();
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining("detail=fiche"));
+  });
+
+  it("la fiche récupère type.id/icone depuis la feature d'origine (absents du detail=fiche)", async () => {
+    const { container } = render(<App />);
+    fireEvent.click(await screen.findByText("Refuge Test")); // zoneData : type id 10
+    await screen.findByText(/2000 m/);
+    // type.id=10 récupéré -> icône par défaut cabane_red
+    expect(container.querySelector("img.fiche-icon")?.getAttribute("src")).toBe(
+      "https://www.refuges.info/images/icones/cabane_red.png"
+    );
+  });
+
+  it("l'onglet Favoris charge chaque favori par un appel /api/point individuel", async () => {
+    localStorage.setItem("refuges-favoris", JSON.stringify([1, 2]));
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    fireEvent.click(screen.getByText(/Favoris/));
+    await waitFor(() => {
+      const urls = fetch.mock.calls.map((c) => c[0]).filter((u) => u.includes("/api/point?"));
+      expect(urls.some((u) => u.includes("/api/point?id=1&"))).toBe(true);
+      expect(urls.some((u) => u.includes("/api/point?id=2&"))).toBe(true);
+    });
   });
 
   it("charge un massif quand on tape son nom exact dans l'autocomplétion", async () => {

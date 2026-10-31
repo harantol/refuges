@@ -3,7 +3,7 @@ import { pointColor, iconUrl } from "../types";
 import { haversineKm } from "../geo";
 import SafeHtml from "./SafeHtml";
 import Lightbox from "./Lightbox";
-import { commentDate } from "../utils";
+import { commentDate, formatDateFr } from "../utils";
 
 const API_ORIGIN = "https://www.refuges.info";
 
@@ -29,11 +29,19 @@ export default function Fiche({ fiche, loading, userPos, favorites, onToggleFavo
   const infoComp = Object.values(p.info_comp || {}).filter((i) => i && i.valeur != null && i.valeur !== "");
   const commentaires = p.commentaires || [];
   const photos = commentaires.filter((c) => c.photo);
+
+  // En detail=fiche, l'API retire lien, places (déplacé dans info_comp), coord.lat/long
+  // et type.id/icone : on les reconstruit depuis l'id et la géométrie.
+  const lien = p.lien || `https://www.refuges.info/point/${fiche.id}`;
+  const places = p.places?.valeur ?? p.info_comp?.places?.valeur;
+  const [lng, lat] = fiche.geometry?.coordinates || [];
+  const latV = p.coord?.lat ?? lat;
+  const longV = p.coord?.long ?? lng;
   const [lightboxIndex, setLightboxIndex] = useState(null);
 
   let distTxt = "";
-  if (userPos != null && p.coord?.lat != null && p.coord?.long != null) {
-    const d = haversineKm(userPos, [p.coord.lat, p.coord.long]);
+  if (userPos != null && latV != null && longV != null) {
+    const d = haversineKm(userPos, [latV, longV]);
     const km = d < 10 ? d.toFixed(1) : String(Math.round(d));
     distTxt = ` · ${km} km de vous`;
   }
@@ -52,15 +60,15 @@ export default function Fiche({ fiche, loading, userPos, favorites, onToggleFavo
         {iconUrl(fiche) && <img className="fiche-icon" src={iconUrl(fiche)} alt="" />}
         {p.nom || "(sans nom)"}
       </h2>
-      {p.coord && (
+      {(p.coord?.alt != null || latV != null) && (
         <p className="kv">
-          <b>Altitude :</b> {p.coord.alt != null ? p.coord.alt + " m" : "?"} · <b>Lat</b> {p.coord.lat}, <b>Long</b>{" "}
-          {p.coord.long}
+          <b>Altitude :</b> {p.coord?.alt != null ? p.coord.alt + " m" : "?"}
+          {latV != null && <> · <b>Lat</b> {latV}, <b>Long</b> {longV}</>}
           {distTxt}
         </p>
       )}
       {p.etat?.valeur && <p className="kv"><b>État :</b> {p.etat.valeur}</p>}
-      {p.places?.valeur != null && <p className="kv"><b>Places :</b> {p.places.valeur}</p>}
+      {places != null && <p className="kv"><b>Places :</b> {places}</p>}
       {p.proprio?.valeur && <p className="kv"><b>{p.proprio.nom} :</b> {p.proprio.valeur}</p>}
 
       {infoComp.length > 0 && (
@@ -106,17 +114,15 @@ export default function Fiche({ fiche, loading, userPos, favorites, onToggleFavo
         />
       )}
 
-      {p.date && (
+      {p.date?.creation && (
         <>
           <h3>Dates</h3>
-          <p className="kv">Création : {p.date.creation || "?"} · Modifié : {p.date.derniere_modif || "?"}</p>
+          <p className="kv">Fiche créée le {formatDateFr(p.date.creation)}</p>
         </>
       )}
-      {p.lien && (
-        <p>
-          <a href={p.lien} target="_blank" rel="noopener">Fiche complète sur refuges.info &#8599;</a>
-        </p>
-      )}
+      <p>
+        <a href={lien} target="_blank" rel="noopener">Fiche complète sur refuges.info &#8599;</a>
+      </p>
       {commentaires.length > 0 && (
         <>
           <h3>Commentaires ({commentaires.length})</h3>

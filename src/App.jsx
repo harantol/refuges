@@ -134,7 +134,7 @@ export default function App() {
     if (allPointsRef.current) return allPointsRef.current;
     let cached = null;
     try {
-      cached = sessionStorage.getItem("refuges-all");
+      cached = sessionStorage.getItem("refuges-all-v2");
     } catch {
       /* sessionStorage indisponible */
     }
@@ -145,7 +145,7 @@ export default function App() {
     const data = await fetchAllPoints();
     allPointsRef.current = data.features || [];
     try {
-      sessionStorage.setItem("refuges-all", JSON.stringify(allPointsRef.current));
+      sessionStorage.setItem("refuges-all-v2", JSON.stringify(allPointsRef.current));
     } catch {
       /* quota dépassé, on garde en mémoire seulement */
     }
@@ -236,6 +236,12 @@ export default function App() {
 
   const displayedFeatures = searchResults ?? visibleFeatures;
 
+  // Ref des features affichées (pour récupérer type.id/icone des fiches detail=fiche)
+  const displayedRef = useRef([]);
+  useEffect(() => {
+    displayedRef.current = displayedFeatures;
+  }, [displayedFeatures]);
+
   const toggleType = useCallback((id, checked) => {
     setUncheckedTypes((prev) => {
       const next = new Set(prev);
@@ -253,6 +259,17 @@ export default function App() {
     fetchFiche(id)
       .then((data) => {
         const f = data.features?.[0] || null;
+        // En detail=fiche, type perd son id/icone : on les récupère de la feature d'origine
+        if (f && !f.properties?.type?.id) {
+          const orig = displayedRef.current.find((x) => x.id === id);
+          if (orig?.properties?.type) {
+            f.properties.type = {
+              ...f.properties.type,
+              id: orig.properties.type.id,
+              icone: orig.properties.type.icone,
+            };
+          }
+        }
         setFiche(f);
         const c = f?.geometry?.coordinates;
         if (c) setFocus([c[1], c[0]]);
