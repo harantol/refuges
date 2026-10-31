@@ -15,6 +15,7 @@ export default function Header({
   onRecentChange,
   status,
   allTypes,
+  typeCounts,
   uncheckedTypes,
   onToggleType,
 }) {
@@ -71,7 +72,7 @@ export default function Header({
         </select>
         <span id="status">{status}</span>
       </div>
-      <TypeFilters allTypes={allTypes} uncheckedTypes={uncheckedTypes} onToggle={onToggleType} />
+      <TypeFilters allTypes={allTypes} typeCounts={typeCounts} uncheckedTypes={uncheckedTypes} onToggle={onToggleType} />
     </header>
   );
 }

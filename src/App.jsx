@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Header from "./components/Header";
 import MapView from "./components/MapView";
 import Sidebar from "./components/Sidebar";
+import { TYPE_LABELS } from "./types";
 import { fetchZone, fetchMassifPoints, fetchPointsByIds, fetchFiche, fetchMassifs, fetchAllPoints, fetchAllPointsDetail, fetchPointsDetail } from "./api";
 
 const FAVORIS_KEY = "refuges-favoris";
@@ -100,13 +101,27 @@ export default function App() {
       });
   }, [mode, favorites]);
 
+  // Liste des types TOUJOURS exhaustive : les types connus de l'API (TYPE_LABELS),
+  // complétés par les labels réellement rencontrés (ids exotiques éventuels).
+  // Ne dépend PAS de la zone visible : le filtre ne change plus selon le zoom.
   const allTypes = useMemo(() => {
     const m = new Map();
+    for (const [id, label] of Object.entries(TYPE_LABELS)) m.set(Number(id), label);
     for (const f of features) {
       const t = f.properties?.type;
       if (t && t.id != null && !m.has(t.id)) m.set(t.id, t.valeur);
     }
     return m;
+  }, [features]);
+
+  // Nombre de points de chaque type dans la zone courante (pour l'affichage)
+  const typeCounts = useMemo(() => {
+    const c = new Map();
+    for (const f of features) {
+      const id = f.properties?.type?.id;
+      if (id != null) c.set(id, (c.get(id) || 0) + 1);
+    }
+    return c;
   }, [features]);
 
   const visibleFeatures = useMemo(() => {
@@ -331,6 +346,7 @@ export default function App() {
         onRecentChange={setRecentDays}
         status={status}
         allTypes={allTypes}
+        typeCounts={typeCounts}
         uncheckedTypes={uncheckedTypes}
         onToggleType={toggleType}
       />
