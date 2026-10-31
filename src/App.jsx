@@ -34,6 +34,7 @@ export default function App() {
   const [hillshade, setHillshade] = useState(false);
   const [userPos, setUserPos] = useState(null);
   const [favorites, setFavorites] = useState(loadFavorites);
+  const [favOverride, setFavOverride] = useState(null); // ids de favoris venus de l'URL (#favoris=1,2,3)
   const [recentDays, setRecentDays] = useState(0);
   const [massifQuery, setMassifQuery] = useState("");
   const [searchResults, setSearchResults] = useState(null);
@@ -84,14 +85,15 @@ export default function App() {
   useEffect(() => {
     if (mode.type !== "favoris") return;
     const token = ++fetchToken.current;
-    if (favorites.size === 0) {
+    const ids = favOverride ?? [...favorites]; // favOverride = ids venus de l'URL (#favoris=1,2,3)
+    if (ids.length === 0) {
       setFeatures([]);
       setTotal(0);
       setStatus("Aucun favori — cliquez sur ☆ dans la liste ou la fiche");
       return;
     }
     setStatus("Chargement des favoris…");
-    fetchPointsByIds([...favorites])
+    fetchPointsByIds(ids)
       .then((data) => {
         if (token !== fetchToken.current) return;
         setFeatures(data.features || []);
@@ -101,7 +103,7 @@ export default function App() {
       .catch((e) => {
         if (token === fetchToken.current) setStatus("Erreur de chargement : " + e.message);
       });
-  }, [mode, favorites]);
+  }, [mode, favorites, favOverride]);
 
   // Liste des types TOUJOURS exhaustive : les types connus de l'API (TYPE_LABELS),
   // complétés par les labels réellement rencontrés (ids exotiques éventuels).
@@ -236,7 +238,8 @@ export default function App() {
     setStatus("");
   }, []);
 
-  const displayedFeatures = searchResults ?? visibleFeatures;
+  // En mode favoris, on n'affiche jamais les résultats de recherche (bug : ils polluaient la liste)
+  const displayedFeatures = mode.type === "favoris" || !searchResults ? visibleFeatures : searchResults;
 
   // Ref des features affichées (pour récupérer type.id/icone des fiches detail=fiche)
   const displayedRef = useRef([]);
@@ -258,6 +261,11 @@ export default function App() {
     setTab("fiche");
     setFiche(null);
     setFicheLoading(true);
+    try {
+      history.replaceState(null, "", "#point=" + id); // l'URL reflète la fiche ouverte (partageable)
+    } catch {
+      /* history indisponible */
+    }
     fetchFiche(id)
       .then((data) => {
         const f = data.features?.[0] || null;
@@ -338,14 +346,65 @@ export default function App() {
 
   const changeTab = useCallback(
     (t) => {
-      setTab((prev) => {
-        if (t === "favoris") setMode({ type: "favoris" });
-        else if (prev === "favoris" && t === "liste") setMode({ type: "zone" });
-        return t;
-      });
+      if (t === "favoris") {
+        setMode({ type: "favoris" });
+        // quitter une recherche active en allant aux favoris
+        setSearchResults(null);
+        setSearchCount(null);
+      } else if (tab === "favoris" && t === "liste") {
+        setMode({ type: "zone" });
+      }
+      setTab(t);
     },
-    []
+    [tab]
   );
+
+  // Lecture du hash au démarrage : #point=<id> | #favoris | #favoris=1,2,3
+  useEffect(() => {
+    const h = window.location.hash.replace(/^#/, "");
+    if (!h) return;
+    if (h.startsWith("point=")) {
+      const id = Number(h.slice(6));
+      if (Number.isFinite(id) && id > 0) selectPoint(id);
+    } else if (h === "favoris") {
+      changeTab("favoris");
+    } else if (h.startsWith("favoris=")) {
+      const ids = h
+        .slice(8)
+        .split(",")
+        .map(Number)
+        .filter((n) => Number.isFinite(n) && n > 0);
+      if (ids.length > 0) {
+        setFavOverride(ids); // affichés sans toucher au localStorage du destinataire
+        setMode({ type: "favoris" });
+        setTab("favoris");
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const copyText = useCallback(async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setStatus("Lien copié dans le presse-papiers ✓");
+    } catch {
+      setStatus("Lien : " + text);
+    }
+  }, []);
+
+  const sharePoint = useCallback(
+    (id) => {
+      copyText(`${window.location.origin}${window.location.pathname}#point=${id}`);
+    },
+    [copyText]
+  );
+
+  const shareFavorites = useCallback(() => {
+    const ids = [...favorites];
+    copyText(
+      `${window.location.origin}${window.location.pathname}#favoris${ids.length ? "=" + ids.join(",") : ""}`
+    );
+  }, [favorites, copyText]);
 
   return (
     <>
@@ -384,6 +443,8 @@ export default function App() {
           searching={searching}
           searchCount={searchCount}
           searchActive={searchResults != null}
+          onSharePoint={sharePoint}
+          onShareFavorites={shareFavorites}
           selectedId={selectedId}
           onSelect={selectPoint}
           fiche={fiche}

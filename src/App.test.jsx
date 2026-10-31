@@ -143,6 +143,11 @@ beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
   allDataMock = allData;
+  try {
+    history.replaceState(null, "", window.location.pathname); // reset du hash entre les tests
+  } catch {
+    /* jsdom */
+  }
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url) => {
@@ -300,6 +305,49 @@ describe("App (intégration, fetch mocké)", () => {
     );
     // la case existe toujours et reste décochée
     expect(within(document.getElementById("type-filters")).getByLabelText(/cabane non gardée/)).not.toBeChecked();
+  });
+
+  it("fix: aller à l'onglet Favoris efface les résultats de recherche (ne polluent plus la liste)", async () => {
+    localStorage.setItem("refuges-favoris", JSON.stringify([1]));
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    fireEvent.click(document.getElementById("tab-recherche"));
+    fireEvent.change(screen.getByPlaceholderText(/Nom du refuge/i), { target: { value: "lac" } });
+    fireEvent.click(screen.getByRole("button", { name: /Rechercher/i }));
+    await screen.findByText("Cabane du Lac");
+    fireEvent.click(screen.getByRole("button", { name: /Favoris/ }));
+    await waitFor(() => expect(screen.queryByText("Cabane du Lac")).not.toBeInTheDocument());
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/point?id=1&"));
+  });
+
+  it("au chargement avec #point=1, ouvre directement la fiche du point", async () => {
+    window.location.hash = "#point=1";
+    render(<App />);
+    expect(await screen.findByText(/2000 m/)).toBeInTheDocument();
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("detail=fiche"));
+    window.location.hash = "";
+  });
+
+  it("au chargement avec #favoris=7,8, charge ces points sans toucher au localStorage", async () => {
+    window.location.hash = "#favoris=7,8";
+    render(<App />);
+    await waitFor(() => {
+      const urls = fetch.mock.calls.map((c) => c[0]).filter((u) => u.includes("/api/point?"));
+      expect(urls.some((u) => u.includes("/api/point?id=7&"))).toBe(true);
+      expect(urls.some((u) => u.includes("/api/point?id=8&"))).toBe(true);
+    });
+    expect(localStorage.getItem("refuges-favoris")).toBeNull();
+    window.location.hash = "";
+  });
+
+  it("le bouton 🔗 de la fiche copie le lien #point=<id> dans le presse-papiers", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    render(<App />);
+    fireEvent.click(await screen.findByText("Refuge Test"));
+    await screen.findByText(/2000 m/);
+    fireEvent.click(screen.getByTitle(/Copier le lien de partage/));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(expect.stringContaining("#point=1")));
   });
 
   it("le bouton ✕ efface la recherche et réaffiche la zone", async () => {
