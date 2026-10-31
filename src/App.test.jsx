@@ -7,11 +7,15 @@ import { TYPE_LABELS } from "./types";
 vi.mock("./components/MapView", async () => {
   const React = await import("react");
   return {
-    default: ({ onNavigate }) => {
+    default: ({ onNavigate, basemap, hillshade }) => {
       React.useEffect(() => {
         onNavigate("6.0,45.5,7.0,46.0");
       }, [onNavigate]);
-      return React.createElement("div", { "data-testid": "map" });
+      return React.createElement("div", {
+        "data-testid": "map",
+        "data-basemap": basemap,
+        "data-hillshade": String(Boolean(hillshade)),
+      });
     },
   };
 });
@@ -165,6 +169,23 @@ describe("App (intégration, fetch mocké)", () => {
     expect(await screen.findByText("Refuge Test")).toBeInTheDocument();
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/bbox?bbox=6.0,45.5,7.0,46.0"));
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/polygones?type_polygone=1"));
+  });
+
+  it("fond de carte par défaut = OpenTopoMap", async () => {
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    expect(screen.getByTestId("map").getAttribute("data-basemap")).toBe("topo");
+  });
+
+  it("la case Pentes active/désactive la couche hillshade sur la carte", async () => {
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    const map = screen.getByTestId("map");
+    expect(map.getAttribute("data-hillshade")).toBe("false");
+    fireEvent.click(screen.getByLabelText(/Pentes/));
+    expect(map.getAttribute("data-hillshade")).toBe("true");
+    fireEvent.click(screen.getByLabelText(/Pentes/));
+    expect(map.getAttribute("data-hillshade")).toBe("false");
   });
 
   it("au clic sur un point, charge et affiche sa fiche", async () => {

@@ -4,6 +4,7 @@ import MapView from "./components/MapView";
 import Sidebar from "./components/Sidebar";
 import { TYPE_LABELS } from "./types";
 import { fetchZone, fetchMassifPoints, fetchPointsByIds, fetchFiche, fetchMassifs, fetchAllPoints, fetchAllPointsDetail } from "./api";
+import { IGN_HAS_KEY } from "./basemaps";
 
 const FAVORIS_KEY = "refuges-favoris";
 
@@ -29,7 +30,8 @@ export default function App() {
   const [filterText, setFilterText] = useState("");
   const [uncheckedTypes, setUncheckedTypes] = useState(() => new Set());
   const [focus, setFocus] = useState(null);
-  const [basemap, setBasemap] = useState("osm");
+  const [basemap, setBasemap] = useState("topo"); // OpenTopoMap par défaut
+  const [hillshade, setHillshade] = useState(false);
   const [userPos, setUserPos] = useState(null);
   const [favorites, setFavorites] = useState(loadFavorites);
   const [recentDays, setRecentDays] = useState(0);
@@ -311,6 +313,13 @@ export default function App() {
     setMassifQuery("");
   }, []);
 
+  const changeBasemap = useCallback((b) => {
+    setBasemap(b);
+    if (b === "ign" && !IGN_HAS_KEY) {
+      setStatus("IGN Top 25 : clé API requise — créez-la sur geoservices.ign.fr (VITE_IGN_API_KEY ou localStorage ign-api-key). Le Plan IGN v2 est dispo sans clé.");
+    }
+  }, []);
+
   const onNavigate = useCallback((b) => setBbox(b), []);
 
   const toggleFavorite = useCallback((id) => {
@@ -347,7 +356,9 @@ export default function App() {
         onZoneClick={onZoneClick}
         zoneActive={mode.type === "zone"}
         basemap={basemap}
-        onBasemapChange={setBasemap}
+        onBasemapChange={changeBasemap}
+        hillshade={hillshade}
+        onHillshadeChange={setHillshade}
         onLocate={locate}
         located={userPos != null}
         recentDays={recentDays}
@@ -359,7 +370,7 @@ export default function App() {
         onToggleType={toggleType}
       />
       <main>
-        <MapView features={displayedFeatures} onSelect={selectPoint} onNavigate={onNavigate} focus={focus} basemap={basemap} userPos={userPos} />
+        <MapView features={displayedFeatures} onSelect={selectPoint} onNavigate={onNavigate} focus={focus} basemap={basemap} userPos={userPos} hillshade={hillshade} />
         <Sidebar
           tab={tab}
           onTabChange={changeTab}

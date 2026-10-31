@@ -2,18 +2,23 @@ import { useEffect, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import L from "leaflet";
-import { pointColor } from "../types";
+import { pointColor, iconUrl } from "../types";
 import { escapeHtml } from "../utils";
-import { BASEMAPS } from "../basemaps";
+import { BASEMAPS, HILLSHADE } from "../basemaps";
 
 function makeIcon(feature) {
   const color = pointColor(feature);
   const nom = escapeHtml(feature.properties?.nom || "");
+  const icon = iconUrl(feature);
+  // Icône refuges.info si disponible, sinon pastille colorée
+  const picto = icon
+    ? `<img class="marker-icon" src="${icon}" alt="" draggable="false" />`
+    : `<span class="dot" style="background:${color}"></span>`;
   return L.divIcon({
     className: "",
-    html: `<span class="dot" style="background:${color}"></span><span class="marker-label" style="border-color:${color};color:${color}">${nom}</span>`,
-    iconSize: [16, 16],
-    iconAnchor: [8, 8],
+    html: `${picto}<span class="marker-label" style="border-color:${color};color:${color}">${nom}</span>`,
+    iconSize: icon ? [28, 28] : [16, 16],
+    iconAnchor: icon ? [14, 26] : [8, 8],
   });
 }
 
@@ -57,8 +62,8 @@ function FocusController({ focus, userPos }) {
   return null;
 }
 
-export default function MapView({ features, onSelect, onNavigate, focus, basemap, userPos }) {
-  const base = BASEMAPS[basemap] || BASEMAPS.osm;
+export default function MapView({ features, onSelect, onNavigate, focus, basemap, userPos, hillshade }) {
+  const base = BASEMAPS[basemap] || BASEMAPS.topo;
   const markers = useMemo(
     () =>
       features.map((f) => ({
@@ -77,6 +82,16 @@ export default function MapView({ features, onSelect, onNavigate, focus, basemap
         maxZoom={base.maxZoom}
         attribution={base.attribution}
       />
+      {hillshade && (
+        <TileLayer
+          key="hillshade"
+          url={HILLSHADE.url}
+          maxZoom={HILLSHADE.maxZoom}
+          opacity={HILLSHADE.opacity}
+          attribution={HILLSHADE.attribution}
+          pane="overlayPane"
+        />
+      )}
       <MapEvents onNavigate={onNavigate} />
       <FocusController focus={focus} userPos={userPos} />
       <MarkerClusterGroup showCoverageOnHover={false}>
