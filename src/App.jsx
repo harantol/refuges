@@ -6,6 +6,7 @@ import Sidebar from "./components/Sidebar";
 import { TYPE_LABELS } from "./types";
 import { fetchZone, fetchMassifPoints, fetchPointsByIds, fetchFiche, fetchMassifs, fetchAllPoints, fetchAllPointsDetail } from "./api";
 import { IGN_HAS_KEY } from "./basemaps";
+import { auth, favorisCloud } from "./cloud";
 
 const FAVORIS_KEY = "refuges-favoris";
 
@@ -38,6 +39,14 @@ export default function App() {
   const [userPos, setUserPos] = useState(null);
   const [favorites, setFavorites] = useState(loadFavorites);
   const [favOverride, setFavOverride] = useState(null); // ids de favoris venus de l'URL (#favoris=1,2,3)
+  const [user, setUser] = useState(null); // compte cloud (Supabase) ou null
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const [accountOpen, setAccountOpen] = useState(false);
+  const userRef = useRef(null);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
   const [recentDays, setRecentDays] = useState(0);
   const [massifQuery, setMassifQuery] = useState("");
   const [searchResults, setSearchResults] = useState(null);
@@ -348,18 +357,102 @@ export default function App() {
 
   const onNavigate = useCallback((b) => setBbox(b), []);
 
-  const toggleFavorite = useCallback((id) => {
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+  const toggleFavorite = useCallback(
+    (id) => {
+      setFavorites((prev) => {
+        const next = new Set(prev);
+        const willFav = !next.has(id);
+        if (willFav) next.add(id);
+        else next.delete(id);
+        try {
+          localStorage.setItem(FAVORIS_KEY, JSON.stringify([...next]));
+        } catch {
+          /* stockage indisponible */
+        }
+        // synchro cloud si connecté
+        if (userRef.current) {
+          const u = userRef.current;
+          if (willFav) favorisCloud.add(u.id, id).catch(() => {});
+          else favorisCloud.remove(u.id, id).catch(() => {});
+        }
+        return next;
+      });
+    },
+    []
+  );
+
+  // Synchro cloud des favoris : merge local + cloud, pousse les locaux manquants
+  const syncFavoris = useCallback(async (u) => {
+    const ids = await favorisCloud.list(u.id);
+    const local = loadFavorites();
+    const merged = new Set([...local, ...ids]);
+    const missing = [...local].filter((id) => !ids.includes(id));
+    await Promise.all(missing.map((id) => favorisCloud.add(u.id, id).catch(() => {})));
+    setFavorites(merged);
+    try {
+      localStorage.setItem(FAVORIS_KEY, JSON.stringify([...merged]));
+    } catch {
+      /* stockage indisponible */
+    }
+    return merged.size;
+  }, []);
+
+  // Restauration de la session au chargement
+  useEffect(() => {
+    (async () => {
+      const u = await auth.me();
+      if (!u) return;
+      setUser(u);
       try {
-        localStorage.setItem(FAVORIS_KEY, JSON.stringify([...next]));
-      } catch {
-        /* stockage indisponible */
+        const n = await syncFavoris(u);
+        setStatus(`Connecté : ${u.email} — ${n} favori(s) synchronisé(s)`);
+      } catch (e) {
+        setStatus("Connecté, synchro des favoris échouée : " + e.message);
       }
-      return next;
-    });
+    })();
+  }, [syncFavoris]);
+
+  const handleLogin = useCallback(
+    async (email, password) => {
+      setAuthBusy(true);
+      setAuthError("");
+      try {
+        const u = await auth.login(email, password);
+        setUser(u);
+        const n = await syncFavoris(u);
+        setStatus(`Connecté : ${u.email} — ${n} favori(s) synchronisé(s)`);
+        setAccountOpen(false);
+      } catch (e) {
+        setAuthError(e.message);
+        throw e;
+      } finally {
+        setAuthBusy(false);
+      }
+    },
+    [syncFavoris]
+  );
+
+  const handleSignup = useCallback(
+    async (email, password) => {
+      setAuthBusy(true);
+      setAuthError("");
+      try {
+        await auth.signup(email, password);
+        await handleLogin(email, password);
+      } catch (e) {
+        setAuthError(e.message);
+        throw e;
+      } finally {
+        setAuthBusy(false);
+      }
+    },
+    [handleLogin]
+  );
+
+  const handleLogout = useCallback(async () => {
+    await auth.logout();
+    setUser(null);
+    setStatus("Déconnecté — les favoris restent en local");
   }, []);
 
   const changeTab = useCallback(
@@ -437,6 +530,14 @@ export default function App() {
         hillshade={hillshade}
         onHillshadeChange={setHillshade}
         onIgnKeySave={saveIgnKey}
+        user={user}
+        accountOpen={accountOpen}
+        onAccountToggle={() => setAccountOpen((v) => !v)}
+        authBusy={authBusy}
+        authError={authError}
+        onLogin={handleLogin}
+        onSignup={handleSignup}
+        onLogout={handleLogout}
         onLocate={locate}
         located={userPos != null}
         recentDays={recentDays}
@@ -467,6 +568,12 @@ export default function App() {
             recentDays={recentDays}
             onRecentChange={setRecentDays}
             onIgnKeySave={saveIgnKey}
+            user={user}
+            authBusy={authBusy}
+            authError={authError}
+            onLogin={handleLogin}
+            onSignup={handleSignup}
+            onLogout={handleLogout}
           />
         </div>
         <Sidebar
