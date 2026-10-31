@@ -215,10 +215,17 @@ main { flex: 1; display: flex; min-height: 0; }
   box-shadow: 0 0 3px #0008;
 }
 
-/* icônes refuges.info */
+/* icônes refuges.info : conteneur en colonne = icône puis label en-dessous (pas de superposition) */
+.marker-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+}
 .marker-icon {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   display: block;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
 }
@@ -237,14 +244,15 @@ main { flex: 1; display: flex; min-height: 0; }
 
 .marker-label {
   display: inline-block;
-  padding: 1px 7px;
+  margin-top: 1px;
+  padding: 0 6px;
   border-radius: 999px;
   background: #ffffffee;
   border: 1px solid #1f4e3d;
   color: #1f4e3d;
   font-size: 11px;
   white-space: nowrap;
-  transform: translate(-50%, -140%);
+  line-height: 1.3;
 }
 
 #fiche-content h2 { margin: 0 0 4px; font-size: 1.15rem; }
