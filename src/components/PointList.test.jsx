@@ -16,7 +16,10 @@ const features = [
   {
     id: 2,
     geometry: { coordinates: [6.2, 45.8] },
-    properties: { nom: "Cabane de Bionnassay", type: { id: 7, valeur: "cabane non gardée" } },
+    properties: {
+      nom: "Cabane de Bionnassay",
+      type: { id: 7, valeur: "cabane non gardée", icone: "cabane_feu" },
+    },
   },
 ];
 
@@ -73,5 +76,16 @@ describe("PointList", () => {
   it("affiche la distance si userPos est fourni", () => {
     renderList({ userPos: [45.9, 6.1] });
     expect(screen.getByText(/0\.0 km/)).toBeInTheDocument();
+  });
+
+  it("affiche l'icône refuges.info (type.icone, sinon défaut par type, sinon pastille)", () => {
+    const extra = [
+      { id: 3, geometry: { coordinates: [6.3, 45.7] }, properties: { nom: "Sans type" } },
+    ];
+    const { container } = renderList({ features: [...features, ...extra] });
+    const srcs = [...container.querySelectorAll("img.li-icon")].map((i) => i.getAttribute("src"));
+    expect(srcs).toContain("https://www.refuges.info/images/icones/cabane_feu.png"); // type.icone (id 2)
+    expect(srcs).toContain("https://www.refuges.info/images/icones/cabane_red.png"); // défaut type 10 (id 1)
+    expect(container.querySelectorAll(".dot").length).toBe(1); // point sans type (id 3)
   });
 });

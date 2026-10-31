@@ -7,7 +7,7 @@ const fiche = {
   geometry: { coordinates: [5.94, 44.64] },
   properties: {
     nom: "Cabane du Vallon d'Âne",
-    type: { id: 7, valeur: "cabane non gardée" },
+    type: { id: 7, valeur: "cabane non gardée", icone: "cabane_eau_x" },
     coord: { alt: 1766, lat: 44.64, long: 5.94 },
     places: { valeur: 12 },
     etat: { valeur: "ouvert" },
@@ -109,6 +109,13 @@ describe("Fiche", () => {
     expect(items[0].querySelector(".equip-val")?.textContent).toBe("Oui");
     // les balises HTML de la valeur sont retirées
     expect(items[2].querySelector(".equip-val")?.textContent).toBe("Inconnu");
+  });
+
+  it("affiche l'icône refuges.info du type dans l'en-tête", () => {
+    const { container } = renderFiche();
+    expect(container.querySelector("img.fiche-icon")?.getAttribute("src")).toBe(
+      "https://www.refuges.info/images/icones/cabane_eau_x.png"
+    );
   });
 
   it("appelle onToggleFavorite avec l'id au clic sur l'étoile", () => {
