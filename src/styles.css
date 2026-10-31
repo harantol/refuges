@@ -36,7 +36,16 @@ html, body, #root {
 
 #status { font-size: 0.85rem; opacity: 0.9; }
 
-#type-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+#type-filters-wrap { font-size: 0.8rem; }
+#type-filters-wrap summary {
+  cursor: pointer;
+  background: #ffffff1a;
+  border-radius: 999px;
+  padding: 3px 10px;
+  user-select: none;
+  display: inline-block;
+}
+#type-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 
 #type-filters label {
   display: inline-flex;
@@ -201,7 +210,98 @@ main { flex: 1; display: flex; min-height: 0; }
   color: #555;
 }
 
+/* ---- Panneau de recherche détaillée ---- */
+#search-panel { display: flex; flex-direction: column; gap: 10px; }
+#search-panel fieldset { border: 1px solid #ddd; border-radius: 8px; padding: 8px 10px; margin: 0; }
+#search-panel legend { font-size: 0.8rem; color: #555; padding: 0 4px; }
+#search-panel .type-checks { display: flex; flex-wrap: wrap; gap: 6px; }
+#search-panel .type-checks label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #eef5f0;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+#search-panel label { display: flex; flex-direction: column; gap: 3px; font-size: 0.8rem; color: #555; }
+#search-panel label.full { width: 100%; }
+#search-panel input, #search-panel select {
+  padding: 7px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+#search-panel .range-row { display: flex; gap: 10px; }
+#search-panel .range-row label { flex: 1; }
+#search-panel .search-actions { display: flex; gap: 8px; }
+#search-panel .search-actions button {
+  flex: 1;
+  padding: 9px;
+  border: 1px solid #1f4e3d;
+  border-radius: 6px;
+  background: #fff;
+  color: #1f4e3d;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+#search-panel .search-actions button.primary { background: #1f4e3d; color: #fff; font-weight: 600; }
+#search-panel .search-actions button:disabled { opacity: 0.6; cursor: default; }
+
+.search-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff3cd;
+  border: 1px solid #ffd166;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  margin-bottom: 8px;
+}
+.search-banner button { border: none; background: none; cursor: pointer; font-size: 0.9rem; }
+
+/* ---- Responsive smartphones ---- */
 @media (max-width: 800px) {
-  main { flex-direction: column; }
-  #sidebar { width: 100%; min-width: 0; height: 40%; border-left: none; border-top: 1px solid #ddd; }
+  #topbar { padding: 6px 8px; gap: 6px; }
+  #topbar h1 { font-size: 0.95rem; }
+  .controls { gap: 6px; }
+  .controls select, .controls button, #massif-search {
+    min-height: 40px;
+    font-size: 0.85rem;
+    padding: 6px 8px;
+  }
+  #massif-search { min-width: 140px; flex: 1; }
+
+  main { flex-direction: column; position: relative; }
+  #map { flex: 1; }
+
+  /* la sidebar devient un panneau coulissant par-dessus la carte */
+  #sidebar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    min-width: 0;
+    height: 45%;
+    border-left: none;
+    border-top: 1px solid #ccc;
+    box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.25);
+    z-index: 1001;
+  }
+
+  /* marqueurs plus gros et sans label sur petit écran */
+  .marker-label { display: none; }
+  .dot { width: 18px; height: 18px; }
+
+  .tab { padding: 12px 4px; font-size: 0.8rem; min-height: 44px; }
+  .panel { padding: 8px; }
+  #filter-text, .search-bar input { min-height: 42px; }
+  #point-list li { padding: 10px; }
+  .fav-btn { font-size: 1.3rem; padding: 6px 4px; }
+  #search-panel input, #search-panel select { min-height: 42px; }
+  #search-panel .search-actions button { min-height: 44px; }
+  #credits { font-size: 0.65rem; }
 }

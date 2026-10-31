@@ -1,5 +1,6 @@
 import PointList from "./PointList";
 import Fiche from "./Fiche";
+import SearchPanel from "./SearchPanel";
 
 export default function Sidebar({
   tab,
@@ -16,10 +17,11 @@ export default function Sidebar({
   userPos,
   favorites,
   onToggleFavorite,
-  searchInput,
-  onSearchChange,
+  onSearch,
   onClearSearch,
   searching,
+  searchCount,
+  searchActive,
 }) {
   const listActive = tab === "liste" || tab === "favoris";
   return (
@@ -31,6 +33,13 @@ export default function Sidebar({
           onClick={() => onTabChange("liste")}
         >
           Liste (<span id="count">{count}</span>)
+        </button>
+        <button
+          id="tab-recherche"
+          className={tab === "recherche" ? "tab active" : "tab"}
+          onClick={() => onTabChange("recherche")}
+        >
+          🔎 Recherche
         </button>
         <button
           id="tab-favoris"
@@ -48,19 +57,14 @@ export default function Sidebar({
         </button>
       </div>
       <div id="panel-liste" className={listActive ? "panel active" : "panel"}>
-        <div className="search-bar">
-          <input
-            type="search"
-            id="search-nom"
-            placeholder="Rechercher un refuge par nom (toute la base)…"
-            value={searchInput}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-          {searchInput && (
-            <button id="btn-clear-search" title="Effacer la recherche" onClick={onClearSearch}>✕</button>
-          )}
-        </div>
-        {searching && <p className="muted small">Recherche en cours…</p>}
+        {searchActive && (
+          <div className="search-banner">
+            <span>Résultats de recherche ({searchCount})</span>
+            <button id="btn-clear-search" title="Effacer la recherche" onClick={onClearSearch}>
+              ✕
+            </button>
+          </div>
+        )}
         <PointList
           features={features}
           filterText={filterText}
@@ -70,6 +74,14 @@ export default function Sidebar({
           userPos={userPos}
           favorites={favorites}
           onToggleFavorite={onToggleFavorite}
+        />
+      </div>
+      <div id="panel-recherche" className={tab === "recherche" ? "panel active" : "panel"}>
+        <SearchPanel
+          onSearch={onSearch}
+          onReset={onClearSearch}
+          searching={searching}
+          resultCount={searchActive ? searchCount : null}
         />
       </div>
       <div id="panel-fiche" className={tab === "fiche" ? "panel active" : "panel"}>

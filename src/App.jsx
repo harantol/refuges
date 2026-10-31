@@ -33,8 +33,8 @@ export default function App() {
   const [favorites, setFavorites] = useState(loadFavorites);
   const [recentDays, setRecentDays] = useState(0);
   const [massifQuery, setMassifQuery] = useState("");
-  const [searchInput, setSearchInput] = useState("");
   const [searchResults, setSearchResults] = useState(null);
+  const [searchCount, setSearchCount] = useState(null);
   const [searching, setSearching] = useState(false);
   const allPointsRef = useRef(null);
   const fetchToken = useRef(0);
@@ -113,55 +113,67 @@ export default function App() {
     return features.filter((f) => !uncheckedTypes.has(f.properties?.type?.id));
   }, [features, uncheckedTypes]);
 
-  // Recherche par nom dans toute la base (base monde mise en cache session)
-  const runSearch = useCallback(async (q) => {
-    const needle = q.trim().toLowerCase();
-    if (needle.length < 2) {
-      setSearchResults(null);
-      return;
-    }
-    setSearching(true);
-    setStatus("Recherche dans toute la base…");
+  // Base complète mise en cache (mémoire + sessionStorage)
+  const loadAllPoints = useCallback(async () => {
+    if (allPointsRef.current) return allPointsRef.current;
+    let cached = null;
     try {
-      if (!allPointsRef.current) {
-        let cached = null;
-        try {
-          cached = sessionStorage.getItem("refuges-all");
-        } catch {
-          /* sessionStorage indisponible */
-        }
-        if (cached) {
-          allPointsRef.current = JSON.parse(cached);
-        } else {
-          const data = await fetchAllPoints();
-          allPointsRef.current = data.features || [];
-          try {
-            sessionStorage.setItem("refuges-all", JSON.stringify(allPointsRef.current));
-          } catch {
-            /* quota dépassé, tant pis */
-          }
-        }
-      }
-      const res = allPointsRef.current
-        .filter((f) => (f.properties?.nom || "").toLowerCase().includes(needle))
-        .slice(0, 300);
-      setSearchResults(res);
-      setStatus(`${res.length} résultat(s) pour « ${q.trim()} »`);
-    } catch (e) {
-      setStatus("Erreur de recherche : " + e.message);
-    } finally {
-      setSearching(false);
+      cached = sessionStorage.getItem("refuges-all");
+    } catch {
+      /* sessionStorage indisponible */
     }
+    if (cached) {
+      allPointsRef.current = JSON.parse(cached);
+      return allPointsRef.current;
+    }
+    const data = await fetchAllPoints();
+    allPointsRef.current = data.features || [];
+    try {
+      sessionStorage.setItem("refuges-all", JSON.stringify(allPointsRef.current));
+    } catch {
+      /* quota dépassé, on garde en mémoire seulement */
+    }
+    return allPointsRef.current;
   }, []);
 
-  useEffect(() => {
-    const t = setTimeout(() => runSearch(searchInput), 350);
-    return () => clearTimeout(t);
-  }, [searchInput, runSearch]);
+  // Recherche détaillée multi-critères dans toute la base
+  const runSearch = useCallback(
+    async (params) => {
+      setSearching(true);
+      setStatus("Recherche dans toute la base…");
+      try {
+        const all = await loadAllPoints();
+        const needle = (params.q || "").toLowerCase();
+        let res = all;
+        if (needle) res = res.filter((f) => (f.properties?.nom || "").toLowerCase().includes(needle));
+        if (params.types) res = res.filter((f) => params.types.has(f.properties?.type?.id));
+        if (params.altMin != null)
+          res = res.filter((f) => (f.properties?.coord?.alt ?? -Infinity) >= params.altMin);
+        if (params.altMax != null)
+          res = res.filter((f) => (f.properties?.coord?.alt ?? Infinity) <= params.altMax);
+        if (params.placesMin != null)
+          res = res.filter((f) => (f.properties?.places?.valeur ?? -1) >= params.placesMin);
+        if (params.etat)
+          res = res.filter((f) =>
+            (f.properties?.etat?.valeur || "").toLowerCase().includes(params.etat)
+          );
+        res = res.slice(0, 500);
+        setSearchResults(res);
+        setSearchCount(res.length);
+        setStatus(`${res.length} résultat(s)`);
+        setTab("liste"); // afficher les résultats dans la liste
+      } catch (e) {
+        setStatus("Erreur de recherche : " + e.message);
+      } finally {
+        setSearching(false);
+      }
+    },
+    [loadAllPoints]
+  );
 
   const clearSearch = useCallback(() => {
-    setSearchInput("");
     setSearchResults(null);
+    setSearchCount(null);
     setStatus("");
   }, []);
 
@@ -281,10 +293,11 @@ export default function App() {
           filterText={filterText}
           onFilterChange={setFilterText}
           features={displayedFeatures}
-          searchInput={searchInput}
-          onSearchChange={setSearchInput}
+          onSearch={runSearch}
           onClearSearch={clearSearch}
           searching={searching}
+          searchCount={searchCount}
+          searchActive={searchResults != null}
           selectedId={selectedId}
           onSelect={selectPoint}
           fiche={fiche}

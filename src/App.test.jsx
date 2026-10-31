@@ -51,12 +51,29 @@ const ficheData = {
   ],
 };
 const allData = {
-  size: 1,
+  size: 2,
   features: [
     {
       id: 42,
       geometry: { coordinates: [6.3, 45.7] },
-      properties: { nom: "Cabane du Lac", type: { id: 7, valeur: "cabane non gardée" } },
+      properties: {
+        nom: "Cabane du Lac",
+        type: { id: 7, valeur: "cabane non gardée" },
+        coord: { alt: 1500 },
+        places: { valeur: 8 },
+        etat: { valeur: "ouvert" },
+      },
+    },
+    {
+      id: 43,
+      geometry: { coordinates: [6.4, 45.8] },
+      properties: {
+        nom: "Refuge du Goûter",
+        type: { id: 10, valeur: "refuge gardé" },
+        coord: { alt: 3835 },
+        places: { valeur: 50 },
+        etat: { valeur: "ouvert" },
+      },
     },
   ],
 };
@@ -106,12 +123,37 @@ describe("App (intégration, fetch mocké)", () => {
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/massif?massif=351"));
   });
 
-  it("recherche par nom dans toute la base (bbox=world, nb_points=all)", async () => {
+  it("recherche détaillée par nom dans toute la base (bbox=world, nb_points=all)", async () => {
     render(<App />);
     await screen.findByText("Refuge Test");
-    fireEvent.change(screen.getByPlaceholderText(/toute la base/i), { target: { value: "lac" } });
+    fireEvent.click(screen.getByText("🔎 Recherche"));
+    fireEvent.change(screen.getByPlaceholderText(/Nom du refuge/i), { target: { value: "lac" } });
+    fireEvent.click(screen.getByRole("button", { name: /Rechercher/i }));
     expect(await screen.findByText("Cabane du Lac")).toBeInTheDocument();
+    expect(screen.queryByText("Refuge Test")).not.toBeInTheDocument();
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining("bbox=world"));
+  });
+
+  it("recherche détaillée filtre par altitude min", async () => {
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    fireEvent.click(screen.getByText("🔎 Recherche"));
+    fireEvent.change(screen.getByLabelText(/Altitude min/i), { target: { value: "3000" } });
+    fireEvent.click(screen.getByRole("button", { name: /Rechercher/i }));
+    expect(await screen.findByText("Refuge du Goûter")).toBeInTheDocument();
+    expect(screen.queryByText("Cabane du Lac")).not.toBeInTheDocument();
+  });
+
+  it("le bouton ✕ efface la recherche et réaffiche la zone", async () => {
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    fireEvent.click(screen.getByText("🔎 Recherche"));
+    fireEvent.change(screen.getByPlaceholderText(/Nom du refuge/i), { target: { value: "lac" } });
+    fireEvent.click(screen.getByRole("button", { name: /Rechercher/i }));
+    await screen.findByText("Cabane du Lac");
+    fireEvent.click(screen.getByTitle("Effacer la recherche"));
+    expect(await screen.findByText("Refuge Test")).toBeInTheDocument();
+    expect(screen.queryByText("Cabane du Lac")).not.toBeInTheDocument();
   });
 
   it("ajoute un favori (persistance localStorage) et l'onglet Favoris le recharge via /api/point", async () => {

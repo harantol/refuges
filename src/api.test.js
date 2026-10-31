@@ -61,11 +61,11 @@ describe("api refuges.info - construction des URLs", () => {
     expect(url).toContain("bbox=world");
   });
 
-  it("fetchAllPoints : monde entier en detail=icone nb_points=all", async () => {
+  it("fetchAllPoints : monde entier en detail=simple nb_points=all", async () => {
     await fetchAllPoints();
     const url = fetch.mock.calls[0][0];
     expect(url).toContain("bbox=world");
-    expect(url).toContain("detail=icone");
+    expect(url).toContain("detail=simple");
     expect(url).toContain("nb_points=all");
   });
 

@@ -9,3 +9,14 @@ export const TYPE_COLORS = {
 export const typeColor = (typeId) => TYPE_COLORS[typeId] || "#1f4e3d";
 
 export const pointColor = (feature) => typeColor(feature?.properties?.type?.id);
+
+// Types de points connus de l'API (cf. doc /api et code source refuges.info)
+export const TYPE_LABELS = {
+  3: "point de passage délicat",
+  7: "cabane non gardée",
+  9: "gîte d'étape",
+  10: "refuge gardé",
+  23: "point d'eau",
+  28: "bâtiment à explorer",
+  29: "abri naturel / grotte",
+};
