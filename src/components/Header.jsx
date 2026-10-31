@@ -1,4 +1,5 @@
 import TypeFilters from "./TypeFilters";
+import { BASEMAPS } from "../basemaps";
 
 export default function Header({
   massifs,
@@ -6,6 +7,8 @@ export default function Header({
   onMassifChange,
   onZoneClick,
   zoneActive,
+  basemap,
+  onBasemapChange,
   status,
   allTypes,
   uncheckedTypes,
@@ -29,6 +32,16 @@ export default function Header({
         <button id="btn-zone" className={zoneActive ? "active" : ""} onClick={onZoneClick} title="Revenir à la zone visible sur la carte">
           Zone visible
         </button>
+        <select
+          id="basemap-select"
+          value={basemap}
+          onChange={(e) => onBasemapChange(e.target.value)}
+          title="Fond de carte"
+        >
+          {Object.entries(BASEMAPS).map(([key, b]) => (
+            <option key={key} value={key}>{b.label}</option>
+          ))}
+        </select>
         <span id="status">{status}</span>
       </div>
       <TypeFilters allTypes={allTypes} uncheckedTypes={uncheckedTypes} onToggle={onToggleType} />

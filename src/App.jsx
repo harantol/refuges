@@ -18,6 +18,7 @@ export default function App() {
   const [filterText, setFilterText] = useState("");
   const [uncheckedTypes, setUncheckedTypes] = useState(() => new Set());
   const [focus, setFocus] = useState(null);
+  const [basemap, setBasemap] = useState("osm");
   const fetchToken = useRef(0);
 
   useEffect(() => {
@@ -112,13 +113,15 @@ export default function App() {
         onMassifChange={onMassifChange}
         onZoneClick={onZoneClick}
         zoneActive={mode.type === "zone"}
+        basemap={basemap}
+        onBasemapChange={setBasemap}
         status={status}
         allTypes={allTypes}
         uncheckedTypes={uncheckedTypes}
         onToggleType={toggleType}
       />
       <main>
-        <MapView features={visibleFeatures} onSelect={selectPoint} onNavigate={onNavigate} focus={focus} />
+        <MapView features={visibleFeatures} onSelect={selectPoint} onNavigate={onNavigate} focus={focus} basemap={basemap} />
         <Sidebar
           tab={tab}
           onTabChange={setTab}

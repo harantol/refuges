@@ -4,6 +4,7 @@ import MarkerClusterGroup from "react-leaflet-cluster";
 import L from "leaflet";
 import { pointColor } from "../types";
 import { escapeHtml } from "../utils";
+import { BASEMAPS } from "../basemaps";
 
 function makeIcon(feature) {
   const color = pointColor(feature);
@@ -46,7 +47,8 @@ function FocusController({ focus }) {
   return null;
 }
 
-export default function MapView({ features, onSelect, onNavigate, focus }) {
+export default function MapView({ features, onSelect, onNavigate, focus, basemap }) {
+  const base = BASEMAPS[basemap] || BASEMAPS.osm;
   const markers = useMemo(
     () =>
       features.map((f) => ({
@@ -60,9 +62,10 @@ export default function MapView({ features, onSelect, onNavigate, focus }) {
   return (
     <MapContainer center={[45.7, 6.4]} zoom={9} id="map">
       <TileLayer
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        maxZoom={19}
-        attribution="&copy; OpenStreetMap"
+        key={basemap}
+        url={base.url}
+        maxZoom={base.maxZoom}
+        attribution={base.attribution}
       />
       <MapEvents onNavigate={onNavigate} />
       <FocusController focus={focus} />
