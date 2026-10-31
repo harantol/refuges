@@ -3,9 +3,9 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import Lightbox from "./Lightbox";
 
 const photos = [
-  { id: 1, photo: "/photos_points/1.jpeg", auteur: "Alice", date: "2024-01-01" },
-  { id: 2, photo: "/photos_points/2.jpeg", auteur: "Bob", date: "2024-02-02" },
-  { id: 3, photo: "/photos_points/3.jpeg", auteur: "Chloe", date: "2024-03-03" },
+  { id: 1, photo: "/photos_points/1.jpeg", auteur: "Alice", date_photo: "2024-01-01" },
+  { id: 2, photo: "/photos_points/2.jpeg", auteur: "Bob", date_photo: "2024-02-02", texte: "Superbe <b>vue</b> !" },
+  { id: 3, photo: "/photos_points/3.jpeg?1774968979", auteur: "Chloe" },
 ];
 
 const renderLightbox = (props = {}) =>
@@ -14,11 +14,19 @@ const renderLightbox = (props = {}) =>
   );
 
 describe("Lightbox (diaporama)", () => {
-  it("affiche la photo à l'index donné avec compteur et légende", () => {
-    renderLightbox({ index: 1 });
+  it("affiche la photo à l'index donné avec légende (auteur, date formatée, compteur) et commentaire", () => {
+    const { container } = renderLightbox({ index: 1 });
     const img = screen.getByRole("img");
     expect(img.getAttribute("src")).toBe("https://www.refuges.info/photos_points/2.jpeg");
-    expect(screen.getByText(/Bob · 2024-02-02 — 2\/3/)).toBeInTheDocument();
+    expect(screen.getByText("Bob")).toBeInTheDocument();
+    expect(screen.getByText(/02\/02\/2024 — 2\/3/)).toBeInTheDocument();
+    // le texte du commentaire est rendu en HTML sous la photo
+    expect(container.querySelector(".lightbox-caption b")?.textContent).toBe("vue");
+  });
+
+  it("extrait la date du timestamp de l'URL photo quand date_photo absent", () => {
+    renderLightbox({ index: 2 });
+    expect(screen.getByText(/\d{2}\/\d{2}\/\d{4} — 3\/3/)).toBeInTheDocument();
   });
 
   it("les flèches appellent onIndexChange avec wrap-around", () => {
