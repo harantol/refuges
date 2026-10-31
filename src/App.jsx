@@ -3,7 +3,7 @@ import Header from "./components/Header";
 import MapView from "./components/MapView";
 import Sidebar from "./components/Sidebar";
 import { TYPE_LABELS } from "./types";
-import { fetchZone, fetchMassifPoints, fetchPointsByIds, fetchFiche, fetchMassifs, fetchAllPoints, fetchAllPointsDetail, fetchPointsDetail } from "./api";
+import { fetchZone, fetchMassifPoints, fetchPointsByIds, fetchFiche, fetchMassifs, fetchAllPoints, fetchAllPointsDetail } from "./api";
 
 const FAVORIS_KEY = "refuges-favoris";
 
@@ -171,11 +171,16 @@ export default function App() {
     return res;
   };
 
-  // Filtre équipements (info_comp, tri-état Oui/Non/Inconnu)
+  // Filtre équipements (info_comp, tri-état Oui/Non/Inconnu).
+  // Les valeurs peuvent contenir du HTML (<b>Inconnu</b>) ou du bbcode ([b]Inconnu[/b]).
   const matchEquip = (feature, equipEntries) => {
     const ic = feature.properties?.info_comp || {};
     return equipEntries.every(([key, val]) => {
-      const v = String(ic[key]?.valeur ?? "").replace(/<[^>]+>/g, "").trim().toLowerCase();
+      const v = String(ic[key]?.valeur ?? "")
+        .replace(/<[^>]+>/g, "")
+        .replace(/\[[^\]]+\]/g, "")
+        .trim()
+        .toLowerCase();
       return val === "oui" ? v === "oui" : v === "non";
     });
   };
@@ -201,26 +206,12 @@ export default function App() {
         let res = applyBaseFilters(all, params);
 
         if (equipEntries.length > 0) {
-          if (res.length <= 800) {
-            // Peu de candidats : on charge le détail complet par paquets de 100 ids
-            setStatus(`Chargement des détails de ${res.length} candidat(s)…`);
-            const details = new Map();
-            for (let i = 0; i < res.length; i += 100) {
-              const data = await fetchPointsDetail(res.slice(i, i + 100).map((f) => f.id));
-              (data.features || []).forEach((f) => details.set(f.id, f));
-            }
-            res = res.filter((f) => {
-              const d = details.get(f.id);
-              return d ? matchEquip(d, equipEntries) : false;
-            });
-          } else {
-            // Beaucoup de candidats : on charge la base complète détaillée (~20 Mo,
-            // une seule fois en mémoire) et on filtre tout dessus, sinon des points
-            // pertinents seraient arbitrairement écartés.
-            setStatus("Chargement de la base détaillée (~20 Mo, une fois pour toutes)…");
-            const allDetail = await loadAllDetail();
-            res = applyBaseFilters(allDetail, params).filter((f) => matchEquip(f, equipEntries));
-          }
+          // info_comp n'existe qu'en detail=complet. /api/point ne prenant qu'un id
+          // à la fois, on charge la base complète détaillée (~20 Mo, une seule fois
+          // en mémoire) et on filtre tout dessus — fiable, sans perte de résultats.
+          setStatus("Chargement de la base détaillée (~20 Mo, une fois pour toutes)…");
+          const allDetail = await loadAllDetail();
+          res = applyBaseFilters(allDetail, params).filter((f) => matchEquip(f, equipEntries));
         }
 
         res = res.slice(0, 500);

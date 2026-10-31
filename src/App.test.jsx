@@ -79,14 +79,17 @@ const allData = {
   ],
 };
 
-const detailData = {
+// Base complète en detail=complet (monde) : utilisée quand un critère équipement est actif
+const detailAllData = {
   features: [
     {
       id: 42,
       geometry: { coordinates: [6.3, 45.7] },
       properties: {
         nom: "Cabane du Lac",
-        info_comp: { cheminee: { nom: "Cheminée", valeur: "Oui" }, eau: { nom: "Eau", valeur: "<b>Inconnu</b>" } },
+        type: { id: 7, valeur: "cabane non gardée" },
+        coord: { alt: 1500 },
+        info_comp: { cheminee: { nom: "Cheminée", valeur: "Oui" }, poele: { nom: "Poêle", valeur: "Non" } },
       },
     },
     {
@@ -94,24 +97,11 @@ const detailData = {
       geometry: { coordinates: [6.4, 45.8] },
       properties: {
         nom: "Refuge du Goûter",
-        info_comp: { cheminee: { nom: "Cheminée", valeur: "Non" }, eau: { nom: "Eau", valeur: "Oui" } },
+        type: { id: 10, valeur: "refuge gardé" },
+        coord: { alt: 3835 },
+        info_comp: { cheminee: { nom: "Cheminée", valeur: "Non" }, poele: { nom: "Poêle", valeur: "Non" } },
       },
     },
-  ],
-};
-
-// Base "simple" monde et base "complet" monde, surchargeables par test
-let allDataMock = allData;
-const allDataBig = {
-  size: 900,
-  features: Array.from({ length: 900 }, (_, i) => ({
-    id: i + 1,
-    geometry: { coordinates: [6.0 + i * 0.001, 45.0] },
-    properties: { nom: `P${i + 1}`, type: { id: 7, valeur: "cabane non gardée" }, coord: { alt: 1000 } },
-  })),
-};
-const detailAllData = {
-  features: [
     {
       id: 900,
       geometry: { coordinates: [6.9, 45.0] },
@@ -129,10 +119,21 @@ const detailAllData = {
         nom: "P1",
         type: { id: 7, valeur: "cabane non gardée" },
         coord: { alt: 1000 },
-        info_comp: { poele: { nom: "Poêle", valeur: "Non" } },
+        info_comp: { poele: { nom: "Poêle", valeur: "[b]Inconnu[/b]" } },
       },
     },
   ],
+};
+
+// Base "simple" monde et base "complet" monde, surchargeables par test
+let allDataMock = allData;
+const allDataBig = {
+  size: 900,
+  features: Array.from({ length: 900 }, (_, i) => ({
+    id: i + 1,
+    geometry: { coordinates: [6.0 + i * 0.001, 45.0] },
+    properties: { nom: `P${i + 1}`, type: { id: 7, valeur: "cabane non gardée" }, coord: { alt: 1000 } },
+  })),
 };
 
 beforeEach(() => {
@@ -146,7 +147,6 @@ beforeEach(() => {
       if (url.includes("/api/polygones")) return json(massifsData);
       if (url.includes("/api/massif")) return json(massifData);
       if (url.includes("detail=fiche")) return json(ficheData);
-      if (url.includes("/api/point") && url.includes("detail=complet")) return json(detailData);
       if (url.includes("detail=complet") && url.includes("bbox=world")) return json(detailAllData);
       if (url.includes("/api/bbox") && url.includes("nb_points=all")) return json(allDataMock);
       if (url.includes("/api/bbox")) return json(zoneData);
@@ -204,7 +204,7 @@ describe("App (intégration, fetch mocké)", () => {
     expect(screen.queryByText("Cabane du Lac")).not.toBeInTheDocument();
   });
 
-  it("recherche détaillée filtre sur les équipements (info_comp via detail=complet)", async () => {
+  it("recherche détaillée filtre sur les équipements (base complète detail=complet, sans format_texte)", async () => {
     render(<App />);
     await screen.findByText("Refuge Test");
     fireEvent.click(screen.getByText("🔎 Recherche"));
@@ -212,9 +212,10 @@ describe("App (intégration, fetch mocké)", () => {
     fireEvent.click(screen.getByRole("button", { name: /Rechercher/i }));
     expect(await screen.findByText("Cabane du Lac")).toBeInTheDocument();
     expect(screen.queryByText("Refuge du Goûter")).not.toBeInTheDocument();
-    // le détail complet a bien été demandé pour les candidats
-    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("detail=complet"));
-    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/point?id=42,43"));
+    // base complète demandée en detail=complet, SANS format_texte=html (sinon HTTP 500)
+    expect(fetch).toHaveBeenCalledWith(expect.stringMatching(/bbox=world.*detail=complet/));
+    const detailUrl = fetch.mock.calls.map((c) => c[0]).find((u) => u.includes("detail=complet"));
+    expect(detailUrl).not.toContain("format_texte=html");
   });
 
   it("recherche équipements avec >800 candidats : charge la base complète détaillée (pas de cap arbitraire)", async () => {

@@ -20,18 +20,37 @@ export const fetchMassifPoints = (massifId, recentDays = 0) =>
       (recentDays > 0 ? `&depuis=-${recentDays * 86400}` : "")
   );
 
-export const fetchPointsByIds = (ids) =>
-  apiFetch(`${API}/point?id=${ids.join(",")}&format=geojson&detail=simple&nb_points=all&cache=300`);
+// /api/point ne supporte QU'UN SEUL id (intval côté serveur) : on fait un appel par id.
+export const fetchPointsByIds = async (ids) => {
+  const features = [];
+  const results = await Promise.all(
+    ids.map((id) =>
+      apiFetch(`${API}/point?id=${id}&format=geojson&detail=simple&nb_points=all&cache=300`)
+        .then((d) => d.features || [])
+        .catch(() => [])
+    )
+  );
+  for (const fs of results) features.push(...fs);
+  return { features, size: features.length };
+};
 
 export const fetchFiche = (id) =>
   apiFetch(`${API}/point?id=${id}&format=geojson&detail=fiche&format_texte=html`);
 
-// Détail complet (inclut info_comp) pour un lot d'ids — utilisé par la recherche
-// détaillée sur équipements, par paquets pour rester raisonnable.
-export const fetchPointsDetail = (ids) =>
-  apiFetch(
-    `${API}/point?id=${ids.join(",")}&format=geojson&detail=complet&format_texte=html&nb_points=all&cache=300`
+// Détail complet (inclut info_comp) pour un lot d'ids.
+// /api/point ne prenant qu'un id à la fois, on fait un appel par id.
+export const fetchPointsDetail = async (ids) => {
+  const features = [];
+  const results = await Promise.all(
+    ids.map((id) =>
+      apiFetch(`${API}/point?id=${id}&format=geojson&detail=complet&nb_points=all&cache=300`)
+        .then((d) => d.features || [])
+        .catch(() => [])
+    )
   );
+  for (const fs of results) features.push(...fs);
+  return { features, size: features.length };
+};
 
 export const fetchMassifs = () =>
   apiFetch(`${API}/polygones?type_polygone=1&format=geojson&bbox=world`);
@@ -42,6 +61,7 @@ export const fetchAllPoints = () =>
   apiFetch(`${API}/bbox?bbox=world&format=geojson&detail=simple&nb_points=all&cache=300`);
 
 // Base complète en détail complet (inclut info_comp) — ~20 Mo, chargée une seule fois
-// en mémoire, uniquement si la recherche porte sur les équipements
+// en mémoire, uniquement si la recherche porte sur les équipements.
+// ATTENTION : ne PAS ajouter format_texte=html ici, le serveur renvoie HTTP 500.
 export const fetchAllPointsDetail = () =>
-  apiFetch(`${API}/bbox?bbox=world&format=geojson&detail=complet&format_texte=html&nb_points=all&cache=300`);
+  apiFetch(`${API}/bbox?bbox=world&format=geojson&detail=complet&nb_points=all&cache=300`);
