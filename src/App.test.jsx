@@ -182,11 +182,11 @@ describe("App (intégration, fetch mocké)", () => {
     expect(screen.getByTestId("map").getAttribute("data-basemap")).toBe("topo");
   });
 
-  it("choisir IGN Top 25 sans clé affiche le formulaire de saisie de clé", async () => {
+  it("choisir IGN Top 25 affiche le formulaire de clé perso (clé partagée par défaut)", async () => {
     render(<App />);
     await screen.findByText("Refuge Test");
     fireEvent.change(screen.getByTitle(/fond de carte/i), { target: { value: "ign" } });
-    expect(await screen.findByPlaceholderText(/Clé API IGN/)).toBeInTheDocument();
+    expect(await screen.findByPlaceholderText(/Clé perso IGN/)).toBeInTheDocument();
   });
 
   it("la case Pentes active/désactive la couche hillshade sur la carte", async () => {

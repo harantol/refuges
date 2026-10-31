@@ -24,7 +24,6 @@ export default function Header({
   onIgnKeySave,
 }) {
   const [ignKey, setIgnKey] = useState("");
-  const ignNoKey = Boolean(BASEMAPS.ign.noKey);
   return (
     <header id="topbar">
       <h1>⛺ Explorateur Refuges.info</h1>
@@ -67,12 +66,12 @@ export default function Header({
           />
           Pentes
         </label>
-        {basemap === "ign" && ignNoKey && (
-          <span className="ign-key-form" title="Créez votre clé gratuite sur geoservices.ign.fr (compte requis)">
+        {basemap === "ign" && (
+          <span className="ign-key-form" title="Par défaut, la clé partagée ign_scan_ws est utilisée. Collez ici votre clé perso (geoservices.ign.fr) pour un quota dédié.">
             <input
               id="ign-key-input"
               type="password"
-              placeholder="Clé API IGN…"
+              placeholder="Clé perso IGN (optionnel)…"
               value={ignKey}
               onChange={(e) => setIgnKey(e.target.value)}
             />

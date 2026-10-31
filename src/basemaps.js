@@ -1,9 +1,13 @@
-// Clé API IGN (Géoportail) : variable d'env VITE_IGN_API_KEY au build,
-// ou localStorage "ign-api-key" (à créer sur https://geoservices.ign.fr/).
+// Clé API IGN (Géoplateforme) pour la Top 25 (private/wmts).
+// Ordre : localStorage "ign-api-key" (clé perso, créée sur geoservices.ign.fr)
+// > variable d'env VITE_IGN_API_KEY > clé partagée "ign_scan_ws" qui circule
+// publiquement et est acceptée par private/wmts (vérifié : HTTP 200, pas 401).
+// Une clé perso est préférable en production (quota dédié) ; la clé partagée
+// suffit pour un usage perso mais peut être révoquée/quota-partagée par l'IGN.
 const IGN_KEY =
   (typeof localStorage !== "undefined" && localStorage.getItem("ign-api-key")) ||
   import.meta.env.VITE_IGN_API_KEY ||
-  "";
+  "ign_scan_ws";
 
 export const IGN_HAS_KEY = Boolean(IGN_KEY);
 
@@ -50,11 +54,11 @@ export const BASEMAPS = {
     attribution: "&copy; <a href='https://geoservices.ign.fr/'>IGN</a> — BDUNI J1 (open data)",
     maxZoom: 18,
   },
-  // Top 25 raster (SCAN25) : sur la Géoplateforme elle n'est plus servie sur l'endpoint
-  // public ("Layer unknown" sans clé) mais sur private/wmts avec une clé API (401 sinon)
+  // Top 25 raster (SCAN25) : plus servie sur l'endpoint public ("Layer unknown"),
+  // mais accessible sur private/wmts avec apikey (clé partagée ign_scan_ws par défaut)
   ign: {
-    label: IGN_HAS_KEY ? "IGN Top 25 (clé)" : "IGN Top 25 (clé requise)",
-    url: `https://data.geopf.fr/private/wmts?key=${IGN_KEY}&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&LAYER=GEOGRAPHICALGRIDSYSTEMS.MAPS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}`,
+    label: "IGN Top 25",
+    url: `https://data.geopf.fr/private/wmts?apikey=${IGN_KEY}&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&LAYER=GEOGRAPHICALGRIDSYSTEMS.MAPS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}`,
     attribution: "&copy; <a href='https://geoservices.ign.fr/'>IGN</a> — Géoportail Top 25",
     maxZoom: 18,
     noKey: !IGN_HAS_KEY,

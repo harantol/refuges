@@ -323,8 +323,8 @@ export default function App() {
 
   const changeBasemap = useCallback((b) => {
     setBasemap(b);
-    if (b === "ign" && !IGN_HAS_KEY) {
-      setStatus("IGN Top 25 : collez votre clé API IGN ci-dessus (créée sur geoservices.ign.fr). Le Plan IGN v2 est dispo sans clé.");
+    if (b === "ign") {
+      setStatus("IGN Top 25 : clé partagée ign_scan_ws utilisée par défaut — collez votre clé perso ci-dessus pour un quota dédié.");
     }
   }, []);
 

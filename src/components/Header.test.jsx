@@ -71,10 +71,10 @@ describe("Header", () => {
     expect(props.onHillshadeChange).toHaveBeenCalledWith(true);
   });
 
-  it("affiche le formulaire de clé quand IGN Top 25 est choisi sans clé, et appelle onIgnKeySave", () => {
+  it("affiche le formulaire de clé perso quand IGN Top 25 est choisi, et appelle onIgnKeySave", () => {
     const props = makeProps({ basemap: "ign" });
     render(<Header {...props} />);
-    const input = screen.getByPlaceholderText(/Clé API IGN/);
+    const input = screen.getByPlaceholderText(/Clé perso IGN/);
     fireEvent.change(input, { target: { value: "ma-cle-123" } });
     fireEvent.click(screen.getByText("Enregistrer"));
     expect(props.onIgnKeySave).toHaveBeenCalledWith("ma-cle-123");
@@ -82,7 +82,7 @@ describe("Header", () => {
 
   it("pas de formulaire de clé sur un autre fond", () => {
     render(<Header {...makeProps({ basemap: "osm" })} />);
-    expect(screen.queryByPlaceholderText(/Clé API IGN/)).toBeNull();
+    expect(screen.queryByPlaceholderText(/Clé perso IGN/)).toBeNull();
   });
 
   it("affiche les filtres de type avec compteur", () => {

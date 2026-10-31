@@ -19,11 +19,13 @@ describe("basemaps", () => {
     expect(BASEMAPS.bduni.url).toContain("data.geopf.fr/wmts"); // endpoint public
   });
 
-  it("IGN Top 25 passe par private/wmts avec la clé (l'endpoint public renvoie 'Layer unknown')", () => {
+  it("IGN Top 25 passe par private/wmts avec apikey (clé partagée ign_scan_ws par défaut)", () => {
     expect(BASEMAPS.ign.url).toContain("GEOGRAPHICALGRIDSYSTEMS.MAPS");
     expect(BASEMAPS.ign.url).toContain("private/wmts");
-    expect(BASEMAPS.ign.url).toContain("key=");
+    expect(BASEMAPS.ign.url).toContain("apikey=");
+    // clé partagée de secours -> toujours disponible, une clé perso prend le dessus
     expect(BASEMAPS.ign.noKey).toBe(!IGN_HAS_KEY);
+    expect(BASEMAPS.ign.url).toMatch(/apikey=(ign_scan_ws|\S+)/);
     expect(BASEMAPS.ign.label).toMatch(/Top 25/);
   });
 
