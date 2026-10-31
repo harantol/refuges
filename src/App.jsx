@@ -453,7 +453,17 @@ export default function App() {
       setAuthError("");
       try {
         await auth.signup(email, password);
-        await handleLogin(email, password);
+        try {
+          await handleLogin(email, password); // connexion directe si l'email n'a pas à être confirmé
+        } catch (e) {
+          // Supabase avec "Confirm email" activé : compte créé mais login refusé tant que non confirmé
+          if (/confirm/i.test(e.message)) {
+            setStatus("Compte créé ✓ — confirmez votre adresse email (lien reçu par mail), puis connectez-vous.");
+            setAccountOpen(false);
+            return;
+          }
+          throw e;
+        }
       } catch (e) {
         setAuthError(e.message);
         throw e;

@@ -436,6 +436,35 @@ describe("App (intégration, fetch mocké)", () => {
     expect(document.getElementById("sidebar").className).not.toContain("open");
   });
 
+  it("création de compte avec confirmation email requise : message 'confirmez votre email', pas d'erreur", async () => {
+    vi.stubEnv("VITE_SUPABASE_URL", "https://test.supabase.co");
+    vi.stubEnv("VITE_SUPABASE_ANON_KEY", "anon");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url, opts = {}) => {
+        const u = String(url);
+        const json = (data, status = 200) => ({ ok: status < 400, status, json: async () => data });
+        if (u.startsWith("https://test.supabase.co")) {
+          if (u.includes("/auth/v1/signup")) return json({});
+          if (u.includes("/auth/v1/token")) return json({ error_description: "Email not confirmed" }, 400);
+          if (u.includes("/rest/v1/favoris")) return json([]);
+          return json({});
+        }
+        if (u.includes("/api/polygones")) return json(massifsData);
+        if (u.includes("/api/bbox")) return json(zoneData);
+        return json({ features: [] });
+      })
+    );
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    fireEvent.click(screen.getAllByTitle(/Connexion \/ compte/)[0]);
+    fireEvent.change(screen.getByPlaceholderText("Email"), { target: { value: "new@b.c" } });
+    fireEvent.change(screen.getByPlaceholderText("Mot de passe"), { target: { value: "secret1" } });
+    fireEvent.click(screen.getByText("Créer un compte"));
+    expect(await screen.findByText(/confirmez votre adresse email/i)).toBeInTheDocument();
+    expect(screen.queryByText("Email not confirmed")).toBeNull();
+  });
+
   it("le bouton ✕ efface la recherche et réaffiche la zone", async () => {
     render(<App />);
     await screen.findByText("Refuge Test");
