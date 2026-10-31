@@ -1,5 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { absUrl } from "./Fiche";
+import SafeHtml from "./SafeHtml";
+import { commentDate } from "../utils";
 
 // Diaporama photo en overlay par-dessus la page.
 // Navigation : boutons ‹ ›, clic sur le fond, ou clavier (Échap / ← / →).
@@ -48,8 +50,12 @@ export default function Lightbox({ photos, index, onClose, onIndexChange }) {
       <figure className="lightbox-figure" onClick={(e) => e.stopPropagation()}>
         <img className="lightbox-img" src={absUrl(c.photo)} alt={`Photo ${index + 1} sur ${count}`} />
         <figcaption>
-          {c.auteur || "contributeur"}
-          {c.date ? ` · ${c.date}` : ""} — {index + 1}/{count}
+          <span className="lightbox-meta">
+            <b>{c.auteur || "contributeur"}</b>
+            {commentDate(c) && ` · ${commentDate(c)}`}
+            {` — ${index + 1}/${count}`}
+          </span>
+          {c.texte ? <SafeHtml className="lightbox-caption" html={c.texte} /> : null}
         </figcaption>
       </figure>
     </div>

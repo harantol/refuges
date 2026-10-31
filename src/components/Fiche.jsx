@@ -3,6 +3,7 @@ import { pointColor } from "../types";
 import { haversineKm } from "../geo";
 import SafeHtml from "./SafeHtml";
 import Lightbox from "./Lightbox";
+import { commentDate } from "../utils";
 
 const API_ORIGIN = "https://www.refuges.info";
 
@@ -59,7 +60,7 @@ export default function Fiche({ fiche, loading, userPos, favorites, onToggleFavo
                 key={c.id}
                 className="thumb"
                 onClick={() => setLightboxIndex(i)}
-                title={`Agrandir la photo de ${c.auteur || "contributeur"}`}
+                title={`Photo de ${c.auteur || "contributeur"}${commentDate(c) ? `, le ${commentDate(c)}` : ""}`}
               >
                 <img src={absUrl(c.photo)} alt={`${p.nom || "point"} — photo ${i + 1}`} loading="lazy" />
               </button>

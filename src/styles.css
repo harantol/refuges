@@ -251,6 +251,17 @@ main { flex: 1; display: flex; min-height: 0; }
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
 }
 .lightbox-figure figcaption { color: #ddd; font-size: 0.85rem; margin-top: 10px; }
+.lightbox-meta { display: block; margin-bottom: 4px; }
+.lightbox-caption {
+  display: block;
+  max-width: 80vw;
+  max-height: 18vh;
+  overflow-y: auto;
+  margin: 0 auto;
+  line-height: 1.4;
+  text-align: left;
+}
+.lightbox-caption a { color: #9ecbff; }
 .lightbox-close {
   position: absolute;
   top: 14px;
