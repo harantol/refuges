@@ -78,6 +78,23 @@ describe("PointList", () => {
     expect(screen.getByText(/0\.0 km/)).toBeInTheDocument();
   });
 
+  it("icône de partage à droite du champ de filtre quand showShareFavorites", () => {
+    const onShareFavorites = vi.fn();
+    const { container } = renderList({ showShareFavorites: true, onShareFavorites });
+    const row = container.querySelector(".filter-row");
+    expect(row).not.toBeNull();
+    expect(row.children[0].id).toBe("filter-text");
+    const btn = row.querySelector("#btn-share-favoris");
+    expect(btn?.textContent).toBe("🔗");
+    fireEvent.click(btn);
+    expect(onShareFavorites).toHaveBeenCalled();
+  });
+
+  it("pas d'icône de partage par défaut", () => {
+    const { container } = renderList();
+    expect(container.querySelector("#btn-share-favoris")).toBeNull();
+  });
+
   it("affiche l'icône refuges.info (type.icone, sinon défaut par type, sinon pastille)", () => {
     const extra = [
       { id: 3, geometry: { coordinates: [6.3, 45.7] }, properties: { nom: "Sans type" } },

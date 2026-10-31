@@ -60,17 +60,22 @@ describe("Sidebar", () => {
     expect(screen.getByText(/Liste/).closest("button")).not.toHaveClass("active");
   });
 
-  it("bouton 'copier le lien de la liste' visible uniquement en onglet favoris", () => {
+  it("icône de partage (sans texte) visible uniquement en onglet favoris, à droite du filtre", () => {
     const props = makeProps({ tab: "favoris", favorites: new Set([1, 2]) });
-    render(<Sidebar {...props} />);
-    const btn = screen.getByText(/Copier le lien de la liste \(2\)/);
+    const { container } = render(<Sidebar {...props} />);
+    const btn = screen.getByLabelText("Copier le lien de partage des favoris");
+    expect(btn.textContent).toBe("🔗"); // icône seule, sans texte
+    // située dans la ligne du champ 'Filtrer par nom', après l'input
+    const row = container.querySelector(".filter-row");
+    expect(row.children[0].id).toBe("filter-text");
+    expect(row.children[1]).toBe(btn);
     fireEvent.click(btn);
     expect(props.onShareFavorites).toHaveBeenCalled();
   });
 
-  it("pas de bouton partage favoris hors de l'onglet favoris", () => {
+  it("pas d'icône de partage hors de l'onglet favoris", () => {
     render(<Sidebar {...makeProps({ tab: "liste" })} />);
-    expect(screen.queryByText(/Copier le lien de la liste/)).toBeNull();
+    expect(screen.queryByLabelText(/partage des favoris/)).toBeNull();
   });
 
   it("le panneau recherche contient le formulaire", () => {

@@ -139,7 +139,23 @@ main { flex: 1; display: flex; min-height: 0; }
 .panel { display: none; flex: 1; overflow-y: auto; padding: 10px; }
 .panel.active { display: block; }
 
-#filter-text { width: 100%; margin-bottom: 8px; border: 1px solid #ccc; }
+#filter-text { width: 100%; border: 1px solid #ccc; }
+
+/* champ 'Filtrer par nom' + icône de partage à droite (favoris) */
+.filter-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.filter-row input { flex: 1; min-width: 0; }
+.icon-btn {
+  flex: none;
+  border: none;
+  background: none;
+  font-size: 1.15rem;
+  cursor: pointer;
+  padding: 4px 6px;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 8px;
+}
+.icon-btn:hover { background: #eef5f0; }
 
 .search-bar { display: flex; gap: 6px; margin-bottom: 8px; }
 .search-bar input {
@@ -198,18 +214,7 @@ main { flex: 1; display: flex; min-height: 0; }
 .fav-btn.on { color: #f5a623; }
 .fav-btn.big { font-size: 1.5rem; float: right; }
 
-.share-btn {
-  width: 100%;
-  margin-bottom: 8px;
-  padding: 8px;
-  border: 1px solid #1f4e3d;
-  border-radius: 6px;
-  background: #fff;
-  color: #1f4e3d;
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-.share-btn:hover { background: #eef5f0; }
+
 
 .dot {
   display: inline-block;

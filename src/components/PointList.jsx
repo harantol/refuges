@@ -1,19 +1,32 @@
 import { pointColor, iconUrl } from "../types";
 import { haversineKm } from "../geo";
 
-export default function PointList({ features, filterText, onFilterChange, selectedId, onSelect, userPos, favorites, onToggleFavorite }) {
+export default function PointList({ features, filterText, onFilterChange, selectedId, onSelect, userPos, favorites, onToggleFavorite, showShareFavorites, onShareFavorites }) {
   const q = filterText.trim().toLowerCase();
   const items = features.filter((f) => !q || (f.properties?.nom || "").toLowerCase().includes(q));
 
   return (
     <>
-      <input
-        type="search"
-        id="filter-text"
-        placeholder="Filtrer par nom..."
-        value={filterText}
-        onChange={(e) => onFilterChange(e.target.value)}
-      />
+      <div className="filter-row">
+        <input
+          type="search"
+          id="filter-text"
+          placeholder="Filtrer par nom..."
+          value={filterText}
+          onChange={(e) => onFilterChange(e.target.value)}
+        />
+        {showShareFavorites && (
+          <button
+            id="btn-share-favoris"
+            className="icon-btn"
+            title="Copier le lien de partage de cette liste de favoris"
+            aria-label="Copier le lien de partage des favoris"
+            onClick={onShareFavorites}
+          >
+            🔗
+          </button>
+        )}
+      </div>
       <ul id="point-list">
         {items.map((f) => {
           const p = f.properties || {};
