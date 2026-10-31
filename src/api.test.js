@@ -7,6 +7,7 @@ import {
   fetchPointsDetail,
   fetchMassifs,
   fetchAllPoints,
+  fetchAllPointsDetail,
 } from "./api";
 
 const okJson = (data) => ({ ok: true, status: 200, json: async () => data });
@@ -42,9 +43,22 @@ describe("api refuges.info - construction des URLs", () => {
     expect(url).toContain("depuis=-2592000");
   });
 
-  it("fetchPointsByIds joint les ids avec des virgules", async () => {
-    await fetchPointsByIds([1, 2, 583]);
-    expect(fetch.mock.calls[0][0]).toContain("/api/point?id=1,2,583");
+  it("fetchPointsByIds fait UN appel par id (/api/point n'accepte qu'un seul id) et concatène", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url) => {
+        const m = /id=(\d+)/.exec(url);
+        return { ok: true, status: 200, json: async () => ({ features: [{ id: Number(m[1]) }] }) };
+      })
+    );
+    const data = await fetchPointsByIds([1, 2, 583]);
+    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(fetch.mock.calls.map((c) => c[0])).toEqual([
+      expect.stringContaining("/api/point?id=1"),
+      expect.stringContaining("/api/point?id=2"),
+      expect.stringContaining("/api/point?id=583"),
+    ]);
+    expect(data.features.map((f) => f.id)).toEqual([1, 2, 583]);
   });
 
   it("fetchFiche demande detail=fiche + format_texte=html", async () => {
@@ -55,12 +69,14 @@ describe("api refuges.info - construction des URLs", () => {
     expect(url).toContain("format_texte=html");
   });
 
-  it("fetchPointsDetail : /api/point multi-ids en detail=complet format_texte=html", async () => {
+  it("fetchPointsDetail : un appel par id en detail=complet, SANS format_texte (sinon HTTP 500)", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => okJson({ features: [] })));
     await fetchPointsDetail([42, 43]);
+    expect(fetch).toHaveBeenCalledTimes(2);
     const url = fetch.mock.calls[0][0];
-    expect(url).toContain("/api/point?id=42,43");
+    expect(url).toContain("/api/point?id=42");
     expect(url).toContain("detail=complet");
-    expect(url).toContain("format_texte=html");
+    expect(url).not.toContain("format_texte");
   });
 
   it("fetchMassifs demande les polygones de type 1 sur le monde", async () => {
@@ -76,6 +92,15 @@ describe("api refuges.info - construction des URLs", () => {
     expect(url).toContain("bbox=world");
     expect(url).toContain("detail=simple");
     expect(url).toContain("nb_points=all");
+  });
+
+  it("fetchAllPointsDetail : monde en detail=complet, sans format_texte=html (cause de HTTP 500)", async () => {
+    await fetchAllPointsDetail();
+    const url = fetch.mock.calls[0][0];
+    expect(url).toContain("bbox=world");
+    expect(url).toContain("detail=complet");
+    expect(url).toContain("nb_points=all");
+    expect(url).not.toContain("format_texte=html");
   });
 
   it("lève une erreur sur HTTP non 200", async () => {
