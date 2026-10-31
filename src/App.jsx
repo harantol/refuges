@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Header from "./components/Header";
 import MapView from "./components/MapView";
 import Sidebar from "./components/Sidebar";
-import { fetchZone, fetchMassifPoints, fetchPointsByIds, fetchFiche, fetchMassifs, fetchAllPoints, fetchPointsDetail } from "./api";
+import { fetchZone, fetchMassifPoints, fetchPointsByIds, fetchFiche, fetchMassifs, fetchAllPoints, fetchAllPointsDetail, fetchPointsDetail } from "./api";
 
 const FAVORIS_KEY = "refuges-favoris";
 
@@ -37,6 +37,7 @@ export default function App() {
   const [searchCount, setSearchCount] = useState(null);
   const [searching, setSearching] = useState(false);
   const allPointsRef = useRef(null);
+  const allDetailRef = useRef(null);
   const fetchToken = useRef(0);
 
   useEffect(() => {
@@ -136,6 +137,42 @@ export default function App() {
     return allPointsRef.current;
   }, []);
 
+  // Filtres de base (présents dans le détail "simple")
+  const applyBaseFilters = (list, params) => {
+    const needle = (params.q || "").toLowerCase();
+    let res = list;
+    if (needle) res = res.filter((f) => (f.properties?.nom || "").toLowerCase().includes(needle));
+    if (params.types) res = res.filter((f) => params.types.has(f.properties?.type?.id));
+    if (params.altMin != null)
+      res = res.filter((f) => (f.properties?.coord?.alt ?? -Infinity) >= params.altMin);
+    if (params.altMax != null)
+      res = res.filter((f) => (f.properties?.coord?.alt ?? Infinity) <= params.altMax);
+    if (params.placesMin != null)
+      res = res.filter((f) => (f.properties?.places?.valeur ?? -1) >= params.placesMin);
+    if (params.etat)
+      res = res.filter((f) =>
+        (f.properties?.etat?.valeur || "").toLowerCase().includes(params.etat)
+      );
+    return res;
+  };
+
+  // Filtre équipements (info_comp, tri-état Oui/Non/Inconnu)
+  const matchEquip = (feature, equipEntries) => {
+    const ic = feature.properties?.info_comp || {};
+    return equipEntries.every(([key, val]) => {
+      const v = String(ic[key]?.valeur ?? "").replace(/<[^>]+>/g, "").trim().toLowerCase();
+      return val === "oui" ? v === "oui" : v === "non";
+    });
+  };
+
+  // Base complète en détail complet (~20 Mo), chargée une seule fois en mémoire
+  const loadAllDetail = useCallback(async () => {
+    if (allDetailRef.current) return allDetailRef.current;
+    const data = await fetchAllPointsDetail();
+    allDetailRef.current = data.features || [];
+    return allDetailRef.current;
+  }, []);
+
   // Recherche détaillée multi-critères dans toute la base
   const runSearch = useCallback(
     async (params) => {
@@ -143,43 +180,34 @@ export default function App() {
       setStatus("Recherche dans toute la base…");
       try {
         const all = await loadAllPoints();
-        const needle = (params.q || "").toLowerCase();
-        let res = all;
-        if (needle) res = res.filter((f) => (f.properties?.nom || "").toLowerCase().includes(needle));
-        if (params.types) res = res.filter((f) => params.types.has(f.properties?.type?.id));
-        if (params.altMin != null)
-          res = res.filter((f) => (f.properties?.coord?.alt ?? -Infinity) >= params.altMin);
-        if (params.altMax != null)
-          res = res.filter((f) => (f.properties?.coord?.alt ?? Infinity) <= params.altMax);
-        if (params.placesMin != null)
-          res = res.filter((f) => (f.properties?.places?.valeur ?? -1) >= params.placesMin);
-        if (params.etat)
-          res = res.filter((f) =>
-            (f.properties?.etat?.valeur || "").toLowerCase().includes(params.etat)
-          );
-        // Équipements (info_comp) : absents du détail "simple", on charge le détail
-        // complet uniquement pour les candidats restants, par paquets de 100 ids.
         const equipEntries = Object.entries(params.equip || {}).filter(
           ([, v]) => v === "oui" || v === "non"
         );
+        let res = applyBaseFilters(all, params);
+
         if (equipEntries.length > 0) {
-          const candidats = res.slice(0, 600);
-          setStatus(`Chargement des détails de ${candidats.length} candidat(s)…`);
-          const details = new Map();
-          for (let i = 0; i < candidats.length; i += 100) {
-            const data = await fetchPointsDetail(candidats.slice(i, i + 100).map((f) => f.id));
-            (data.features || []).forEach((f) => details.set(f.id, f));
-          }
-          res = candidats.filter((f) => {
-            const d = details.get(f.id);
-            if (!d) return false;
-            const ic = d.properties?.info_comp || {};
-            return equipEntries.every(([key, val]) => {
-              const v = String(ic[key]?.valeur ?? "").replace(/<[^>]+>/g, "").trim().toLowerCase();
-              return val === "oui" ? v === "oui" : v === "non";
+          if (res.length <= 800) {
+            // Peu de candidats : on charge le détail complet par paquets de 100 ids
+            setStatus(`Chargement des détails de ${res.length} candidat(s)…`);
+            const details = new Map();
+            for (let i = 0; i < res.length; i += 100) {
+              const data = await fetchPointsDetail(res.slice(i, i + 100).map((f) => f.id));
+              (data.features || []).forEach((f) => details.set(f.id, f));
+            }
+            res = res.filter((f) => {
+              const d = details.get(f.id);
+              return d ? matchEquip(d, equipEntries) : false;
             });
-          });
+          } else {
+            // Beaucoup de candidats : on charge la base complète détaillée (~20 Mo,
+            // une seule fois en mémoire) et on filtre tout dessus, sinon des points
+            // pertinents seraient arbitrairement écartés.
+            setStatus("Chargement de la base détaillée (~20 Mo, une fois pour toutes)…");
+            const allDetail = await loadAllDetail();
+            res = applyBaseFilters(allDetail, params).filter((f) => matchEquip(f, equipEntries));
+          }
         }
+
         res = res.slice(0, 500);
         setSearchResults(res);
         setSearchCount(res.length);
@@ -191,7 +219,7 @@ export default function App() {
         setSearching(false);
       }
     },
-    [loadAllPoints]
+    [loadAllPoints, loadAllDetail]
   );
 
   const clearSearch = useCallback(() => {

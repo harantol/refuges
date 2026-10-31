@@ -40,3 +40,8 @@ export const fetchMassifs = () =>
 // recherche détaillée côté client (~3,8 Mo, chargée une fois et mise en cache session)
 export const fetchAllPoints = () =>
   apiFetch(`${API}/bbox?bbox=world&format=geojson&detail=simple&nb_points=all&cache=300`);
+
+// Base complète en détail complet (inclut info_comp) — ~20 Mo, chargée une seule fois
+// en mémoire, uniquement si la recherche porte sur les équipements
+export const fetchAllPointsDetail = () =>
+  apiFetch(`${API}/bbox?bbox=world&format=geojson&detail=complet&format_texte=html&nb_points=all&cache=300`);

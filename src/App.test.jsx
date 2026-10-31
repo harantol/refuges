@@ -99,9 +99,45 @@ const detailData = {
   ],
 };
 
+// Base "simple" monde et base "complet" monde, surchargeables par test
+let allDataMock = allData;
+const allDataBig = {
+  size: 900,
+  features: Array.from({ length: 900 }, (_, i) => ({
+    id: i + 1,
+    geometry: { coordinates: [6.0 + i * 0.001, 45.0] },
+    properties: { nom: `P${i + 1}`, type: { id: 7, valeur: "cabane non gardée" }, coord: { alt: 1000 } },
+  })),
+};
+const detailAllData = {
+  features: [
+    {
+      id: 900,
+      geometry: { coordinates: [6.9, 45.0] },
+      properties: {
+        nom: "P900",
+        type: { id: 7, valeur: "cabane non gardée" },
+        coord: { alt: 1000 },
+        info_comp: { poele: { nom: "Poêle", valeur: "Oui" } },
+      },
+    },
+    {
+      id: 1,
+      geometry: { coordinates: [6.0, 45.0] },
+      properties: {
+        nom: "P1",
+        type: { id: 7, valeur: "cabane non gardée" },
+        coord: { alt: 1000 },
+        info_comp: { poele: { nom: "Poêle", valeur: "Non" } },
+      },
+    },
+  ],
+};
+
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
+  allDataMock = allData;
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url) => {
@@ -109,8 +145,9 @@ beforeEach(() => {
       if (url.includes("/api/polygones")) return json(massifsData);
       if (url.includes("/api/massif")) return json(massifData);
       if (url.includes("detail=fiche")) return json(ficheData);
-      if (url.includes("detail=complet")) return json(detailData);
-      if (url.includes("/api/bbox") && url.includes("nb_points=all")) return json(allData);
+      if (url.includes("/api/point") && url.includes("detail=complet")) return json(detailData);
+      if (url.includes("detail=complet") && url.includes("bbox=world")) return json(detailAllData);
+      if (url.includes("/api/bbox") && url.includes("nb_points=all")) return json(allDataMock);
       if (url.includes("/api/bbox")) return json(zoneData);
       if (url.includes("/api/point")) return json(zoneData);
       return json({ features: [] });
@@ -177,6 +214,19 @@ describe("App (intégration, fetch mocké)", () => {
     // le détail complet a bien été demandé pour les candidats
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining("detail=complet"));
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/point?id=42,43"));
+  });
+
+  it("recherche équipements avec >800 candidats : charge la base complète détaillée (pas de cap arbitraire)", async () => {
+    allDataMock = allDataBig;
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    fireEvent.click(screen.getByText("🔎 Recherche"));
+    fireEvent.change(screen.getByLabelText("Poêle"), { target: { value: "oui" } });
+    fireEvent.click(screen.getByRole("button", { name: /Rechercher/i }));
+    // P900 (poêle=Oui, au-delà du cap de 800) est trouvé ; P1 (poêle=Non) est exclu
+    expect(await screen.findByText("P900")).toBeInTheDocument();
+    expect(screen.queryByText("P1")).not.toBeInTheDocument();
+    expect(fetch).toHaveBeenCalledWith(expect.stringMatching(/bbox=world.*detail=complet/));
   });
 
   it("le bouton ✕ efface la recherche et réaffiche la zone", async () => {
