@@ -9,7 +9,8 @@ Site web en **React 18 + Vite + react-leaflet** qui interroge l'[API publique de
 - **Filtres par type** : liste toujours exhaustive (tous les types connus de l'API), compteurs par zone, état conservé entre les rechargements
 - **🔎 Recherche détaillée** dans toute la base : nom, types, altitude min/max, places min, état, et **tous les équipements** (cheminée, poêle, eau, bois, couvertures, latrines, manque un mur — Oui/Non/Indifférent). Base `simple` (3,8 Mo, cache sessionStorage) + base `complet` (~20 Mo, chargée une seule fois en mémoire) pour les équipements
 - Fiche détaillée (`/api/point?id=...&detail=fiche`) : infos clés + équipements en pastilles en premier, accès/remarques en HTML sanitizé (DOMPurify), **galerie photos avec diaporama (lightbox)** + légendes (commentaire, auteur, date), commentaires datés, lien vers la fiche refuges.info
-- **4 fonds de carte** : OSM, OpenTopoMap, satellite Esri, OSM France HOT
+- **Fonds de carte** : OpenTopoMap (défaut), OSM, OSM France HOT, satellite Esri, **IGN Plan v2** et **IGN BDUNI J1** (officiels, open data, sans clé via data.geopf.fr), **IGN Top 25** (avec clé API Géoplateforme, saisie dans l'UI)
+- **Case « Pentes »** : couche officielle **IGN SLOPES.MOUNTAIN** (open data, sans clé) en overlay
 - **📍 Autour de moi** : géolocalisation + distances (haversine) dans la liste et la fiche
 - **★ Favoris** persistés en localStorage, onglet dédié (un appel `/api/point` par favori — l'API ne prend qu'un seul id)
 - **Filtre "modifié depuis X jours"** via le paramètre `depuis` de l'API

@@ -35,27 +35,37 @@ export const BASEMAPS = {
     maxZoom: 19,
   },
   // Plan IGN v2 : couche vectorielle officielle IGN en OPEN DATA -> aucune clé requise
-  // (vérifié : HTTP 200 image/png sans clé sur data.geopf.fr)
+  // (vérifié : HTTP 200, PNG 119 Ko sans clé sur data.geopf.fr, tuile Mont Blanc z14)
   planign: {
     label: "IGN Plan v2 (officiel, sans clé)",
     url: "https://data.geopf.fr/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}",
     attribution: "&copy; <a href='https://geoservices.ign.fr/'>IGN</a> — Plan IGN v2 (open data)",
     maxZoom: 18,
   },
-  // Top 25 raster : nécessite une clé API IGN (testé : HTTP 400 sans clé)
+  // BDUNI J1 : fond de carte vectoriel officiel du portail IGN, open data sans clé
+  // (vérifié : HTTP 200, PNG 8 Ko sans clé, tuile Mont Blanc z14)
+  bduni: {
+    label: "IGN BDUNI J1 (officiel, sans clé)",
+    url: "https://data.geopf.fr/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&LAYER=GEOGRAPHICALGRIDSYSTEMS.MAPS.BDUNI.J1&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}",
+    attribution: "&copy; <a href='https://geoservices.ign.fr/'>IGN</a> — BDUNI J1 (open data)",
+    maxZoom: 18,
+  },
+  // Top 25 raster (SCAN25) : sur la Géoplateforme elle n'est plus servie sur l'endpoint
+  // public ("Layer unknown" sans clé) mais sur private/wmts avec une clé API (401 sinon)
   ign: {
     label: IGN_HAS_KEY ? "IGN Top 25 (clé)" : "IGN Top 25 (clé requise)",
-    url: `https://data.geopf.fr/wmts?key=${IGN_KEY}&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&LAYER=GEOGRAPHICALGRIDSYSTEMS.MAPS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}`,
+    url: `https://data.geopf.fr/private/wmts?key=${IGN_KEY}&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&LAYER=GEOGRAPHICALGRIDSYSTEMS.MAPS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}`,
     attribution: "&copy; <a href='https://geoservices.ign.fr/'>IGN</a> — Géoportail Top 25",
     maxZoom: 18,
     noKey: !IGN_HAS_KEY,
   },
 };
 
-// Couche "pentes" : hillshade mondial Esri, en overlay au-dessus du fond de carte
+// Couche "pentes" : couche OFFICIELLE IGN "pentes montagne", open data sans clé
+// (vérifié : HTTP 200, PNG 65 Ko sans clé, tuile Mont Blanc z14) — en overlay au-dessus du fond
 export const HILLSHADE = {
-  url: "https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}",
-  attribution: "Esri, Airbus DS, Earthstar Geographics",
-  maxZoom: 15,
-  opacity: 0.45,
+  url: "https://data.geopf.fr/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&LAYER=GEOGRAPHICALGRIDSYSTEMS.SLOPES.MOUNTAIN&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}",
+  attribution: "&copy; <a href='https://geoservices.ign.fr/'>IGN</a> — Pentes montagne (open data)",
+  maxZoom: 18,
+  opacity: 0.55,
 };

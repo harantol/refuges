@@ -58,7 +58,7 @@ export default function Header({
         </select>
         <label
           id="hillshade-toggle"
-          title="Afficher les pentes (relief ombré) par-dessus la carte"
+          title="Afficher les pentes IGN montagne (couche officielle, sans clé) par-dessus la carte"
         >
           <input
             type="checkbox"
