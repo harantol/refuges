@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Header from "./components/Header";
 import MapView from "./components/MapView";
+import MapControls from "./components/MapControls";
 import Sidebar from "./components/Sidebar";
 import { TYPE_LABELS } from "./types";
 import { fetchZone, fetchMassifPoints, fetchPointsByIds, fetchFiche, fetchMassifs, fetchAllPoints, fetchAllPointsDetail } from "./api";
@@ -32,6 +33,8 @@ export default function App() {
   const [focus, setFocus] = useState(null);
   const [basemap, setBasemap] = useState("topo"); // OpenTopoMap par défaut
   const [hillshade, setHillshade] = useState(false);
+  const [mapMenu, setMapMenu] = useState(null); // "basemap" | "filters" | null (menu flottant mobile)
+  const toggleMapMenu = useCallback((m) => setMapMenu((prev) => (prev === m ? null : m)), []);
   const [userPos, setUserPos] = useState(null);
   const [favorites, setFavorites] = useState(loadFavorites);
   const [favOverride, setFavOverride] = useState(null); // ids de favoris venus de l'URL (#favoris=1,2,3)
@@ -445,7 +448,27 @@ export default function App() {
         onToggleType={toggleType}
       />
       <main>
-        <MapView features={displayedFeatures} onSelect={selectPoint} onNavigate={onNavigate} focus={focus} basemap={basemap} userPos={userPos} hillshade={hillshade} />
+        <div id="map-area">
+          <MapView features={displayedFeatures} onSelect={selectPoint} onNavigate={onNavigate} focus={focus} basemap={basemap} userPos={userPos} hillshade={hillshade} />
+          <MapControls
+            basemap={basemap}
+            onBasemapChange={changeBasemap}
+            hillshade={hillshade}
+            onHillshadeChange={setHillshade}
+            onZoneClick={onZoneClick}
+            onLocate={locate}
+            located={userPos != null}
+            menu={mapMenu}
+            onMenuToggle={toggleMapMenu}
+            allTypes={allTypes}
+            typeCounts={typeCounts}
+            uncheckedTypes={uncheckedTypes}
+            onToggleType={toggleType}
+            recentDays={recentDays}
+            onRecentChange={setRecentDays}
+            onIgnKeySave={saveIgnKey}
+          />
+        </div>
         <Sidebar
           tab={tab}
           onTabChange={changeTab}
