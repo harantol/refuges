@@ -9,6 +9,8 @@ export default function Header({
   zoneActive,
   basemap,
   onBasemapChange,
+  hillshade,
+  onHillshadeChange,
   onLocate,
   located,
   recentDays,
@@ -50,6 +52,17 @@ export default function Header({
             <option key={key} value={key}>{b.label}</option>
           ))}
         </select>
+        <label
+          id="hillshade-toggle"
+          title="Afficher les pentes (relief ombré) par-dessus la carte"
+        >
+          <input
+            type="checkbox"
+            checked={hillshade}
+            onChange={(e) => onHillshadeChange(e.target.checked)}
+          />
+          Pentes
+        </label>
         <button
           id="btn-locate"
           className={located ? "active" : ""}

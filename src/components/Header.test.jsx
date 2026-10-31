@@ -10,6 +10,8 @@ const makeProps = (overrides = {}) => ({
   zoneActive: true,
   basemap: "osm",
   onBasemapChange: vi.fn(),
+  hillshade: false,
+  onHillshadeChange: vi.fn(),
   onLocate: vi.fn(),
   located: false,
   recentDays: 0,
@@ -57,6 +59,15 @@ describe("Header", () => {
   it("le bouton locate a la classe active quand located", () => {
     render(<Header {...makeProps({ located: true })} />);
     expect(screen.getByText(/Autour de moi/)).toHaveClass("active");
+  });
+
+  it("la case à cocher Pentes appelle onHillshadeChange", () => {
+    const props = makeProps();
+    render(<Header {...props} />);
+    const cb = screen.getByLabelText(/Pentes/);
+    expect(cb).not.toBeChecked();
+    fireEvent.click(cb);
+    expect(props.onHillshadeChange).toHaveBeenCalledWith(true);
   });
 
   it("affiche les filtres de type avec compteur", () => {
