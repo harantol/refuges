@@ -31,6 +31,7 @@ export default function App() {
   const [basemap, setBasemap] = useState("osm");
   const [userPos, setUserPos] = useState(null);
   const [favorites, setFavorites] = useState(loadFavorites);
+  const [recentDays, setRecentDays] = useState(0);
   const fetchToken = useRef(0);
 
   useEffect(() => {
@@ -53,10 +54,10 @@ export default function App() {
     if (mode.type === "zone") {
       if (!bbox) return;
       setStatus("Chargement de la zone visible…");
-      promise = fetchZone(bbox);
+      promise = fetchZone(bbox, recentDays);
     } else {
       setStatus("Chargement du massif…");
-      promise = fetchMassifPoints(mode.id);
+      promise = fetchMassifPoints(mode.id, recentDays);
     }
     promise
       .then((data) => {
@@ -69,7 +70,7 @@ export default function App() {
         if (token !== fetchToken.current) return;
         setStatus("Erreur de chargement : " + e.message);
       });
-  }, [mode, bbox]);
+  }, [mode, bbox, recentDays]);
 
   useEffect(() => {
     if (mode.type !== "favoris") return;
@@ -196,6 +197,8 @@ export default function App() {
         onBasemapChange={setBasemap}
         onLocate={locate}
         located={userPos != null}
+        recentDays={recentDays}
+        onRecentChange={setRecentDays}
         status={status}
         allTypes={allTypes}
         uncheckedTypes={uncheckedTypes}
