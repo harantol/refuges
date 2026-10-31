@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { pointColor } from "../types";
 import { haversineKm } from "../geo";
 import SafeHtml from "./SafeHtml";
+import Lightbox from "./Lightbox";
 
 const API_ORIGIN = "https://www.refuges.info";
 
@@ -17,6 +19,7 @@ export default function Fiche({ fiche, loading, userPos, favorites, onToggleFavo
   const infoComp = Object.values(p.info_comp || {}).filter((i) => i && i.valeur != null && i.valeur !== "");
   const commentaires = p.commentaires || [];
   const photos = commentaires.filter((c) => c.photo);
+  const [lightboxIndex, setLightboxIndex] = useState(null);
 
   let distTxt = "";
   if (userPos != null && p.coord?.lat != null && p.coord?.long != null) {
@@ -51,13 +54,26 @@ export default function Fiche({ fiche, loading, userPos, favorites, onToggleFavo
         <>
           <h3>Photos ({photos.length})</h3>
           <div className="photo-gallery">
-            {photos.map((c) => (
-              <a key={c.id} href={absUrl(c.photo)} target="_blank" rel="noopener" title={`Photo de ${c.auteur || "contributeur"}`}>
-                <img src={absUrl(c.photo)} alt={`${p.nom || "point"} — photo`} loading="lazy" />
-              </a>
+            {photos.map((c, i) => (
+              <button
+                key={c.id}
+                className="thumb"
+                onClick={() => setLightboxIndex(i)}
+                title={`Agrandir la photo de ${c.auteur || "contributeur"}`}
+              >
+                <img src={absUrl(c.photo)} alt={`${p.nom || "point"} — photo ${i + 1}`} loading="lazy" />
+              </button>
             ))}
           </div>
         </>
+      )}
+      {lightboxIndex != null && (
+        <Lightbox
+          photos={photos}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onIndexChange={setLightboxIndex}
+        />
       )}
 
       {p.acces?.valeur && (<><h3>Accès</h3><SafeHtml className="text" html={p.acces.valeur} /></>)}
