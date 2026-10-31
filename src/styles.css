@@ -584,7 +584,8 @@ main { flex: 1; display: flex; min-height: 0; }
   #search-panel .range-row { flex-direction: column; gap: 6px; }
   #search-panel .search-actions button { min-height: 42px; }
 
-  /* la sidebar devient un panneau coulissant par-dessus la carte */
+  /* la sidebar devient un panneau coulissant par-dessus la carte,
+     REPLIÉ par défaut (seule la barre d'onglets) et déplié au clic sur un onglet */
   #sidebar {
     position: absolute;
     bottom: 0;
@@ -592,14 +593,19 @@ main { flex: 1; display: flex; min-height: 0; }
     right: 0;
     width: 100%;
     min-width: 0;
-    height: 45%;
+    height: 46px;
+    overflow: hidden;
+    transition: height 0.18s ease;
     border-left: none;
     border-top: 1px solid #ccc;
     box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.25);
     z-index: 1001;
   }
-  /* la fiche occupe plus de hauteur sur mobile */
-  #sidebar.fiche-open { width: 100%; min-width: 0; height: 68%; }
+  #sidebar .panel { display: none; }
+  #sidebar.open { height: 55%; overflow: visible; }
+  #sidebar.open .panel.active { display: block; }
+  /* la fiche occupe plus de hauteur quand dépliée */
+  #sidebar.open.fiche-open { height: 78%; }
 
   /* marqueurs plus gros et sans label sur petit écran */
   .marker-label { display: none; }

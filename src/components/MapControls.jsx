@@ -10,7 +10,8 @@ export default function MapControls({
   onBasemapChange,
   hillshade,
   onHillshadeChange,
-  onZoneClick,
+  zoneOnly,
+  onZoneOnlyToggle,
   onLocate,
   located,
   menu,
@@ -39,7 +40,13 @@ export default function MapControls({
       >
         🗺️
       </button>
-      <button title="Recharger la zone visible" aria-label="Zone visible" onClick={onZoneClick}>
+      <button
+        className={zoneOnly ? "active" : ""}
+        title="Interrupteur : limiter l'affichage à la zone visible sur la carte"
+        aria-label="Limiter à la zone visible"
+        aria-pressed={zoneOnly}
+        onClick={onZoneOnlyToggle}
+      >
         🔍
       </button>
       <button
@@ -56,7 +63,10 @@ export default function MapControls({
         aria-label="Filtres"
         onClick={() => onMenuToggle("filters")}
       >
-        ⚙️
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+             strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M3 5h18l-7 8v5.5l-4 2V13L3 5z" />
+        </svg>
       </button>
       <button
         className={menu === "account" ? "active" : ""}
