@@ -36,11 +36,23 @@ alter table favoris enable row level security;
 create policy "own" on favoris for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 ```
-3. Configurez le front (clé **anon publique**, par design) : variables d'env au build
-   `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` (voir `.env.example`), ou
-   `localStorage["supabase-url"]` / `["supabase-anon-key"]` dans la console.
+3. Configurez le front (clé **anon publique**, par design) — valeurs dans Supabase :
+   *Settings → API → Project URL* et *anon public key*.
 
-Sans config, l'app fonctionne en mode local (localStorage seul).
+   **En local** : copiez `.env.example` en `.env` et remplissez :
+   ```
+   VITE_SUPABASE_URL=https://xxxx.supabase.co
+   VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
+   ```
+   puis `npm run dev` (redémarrer le serveur après modification). `.env` est gitignoré.
+
+   **Sur GitHub Pages (prod)** : les `VITE_*` sont embarquées au **build**, donc ajoutez-les
+   dans *Settings → Secrets and variables → Actions → Variables* du dépôt
+   (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, et `VITE_IGN_API_KEY` pour la Top 25) —
+   le workflow `deploy.yml` les passe à `npm run build`. Redéploiement auto au prochain push sur `main`.
+
+   Sans config, l'app fonctionne en mode local (localStorage seul). En secours runtime :
+   `localStorage["supabase-url"]` / `["supabase-anon-key"]` dans la console du navigateur.
 
 ## Tests & CI
 
