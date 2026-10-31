@@ -13,6 +13,7 @@ export default function Sidebar({
   onSelect,
   fiche,
   ficheLoading,
+  userPos,
 }) {
   return (
     <aside id="sidebar">
@@ -39,10 +40,11 @@ export default function Sidebar({
           onFilterChange={onFilterChange}
           selectedId={selectedId}
           onSelect={onSelect}
+          userPos={userPos}
         />
       </div>
       <div id="panel-fiche" className={tab === "fiche" ? "panel active" : "panel"}>
-        <Fiche fiche={fiche} loading={ficheLoading} />
+        <Fiche fiche={fiche} loading={ficheLoading} userPos={userPos} />
       </div>
     </aside>
   );

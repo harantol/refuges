@@ -19,6 +19,7 @@ export default function App() {
   const [uncheckedTypes, setUncheckedTypes] = useState(() => new Set());
   const [focus, setFocus] = useState(null);
   const [basemap, setBasemap] = useState("osm");
+  const [userPos, setUserPos] = useState(null);
   const fetchToken = useRef(0);
 
   useEffect(() => {
@@ -97,6 +98,25 @@ export default function App() {
       .finally(() => setFicheLoading(false));
   }, []);
 
+  const locate = useCallback(() => {
+    if (!navigator.geolocation) {
+      setStatus("Géolocalisation non disponible sur ce navigateur");
+      return;
+    }
+    setStatus("Localisation en cours…");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const p = [pos.coords.latitude, pos.coords.longitude];
+        setUserPos(p);
+        setFocus(p);
+        setMode({ type: "zone" });
+        setStatus("Position trouvée");
+      },
+      (err) => setStatus("Géolocalisation indisponible : " + err.message),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
+
   const onMassifChange = useCallback((id) => {
     if (id) setMode({ type: "massif", id });
   }, []);
@@ -115,13 +135,15 @@ export default function App() {
         zoneActive={mode.type === "zone"}
         basemap={basemap}
         onBasemapChange={setBasemap}
+        onLocate={locate}
+        located={userPos != null}
         status={status}
         allTypes={allTypes}
         uncheckedTypes={uncheckedTypes}
         onToggleType={toggleType}
       />
       <main>
-        <MapView features={visibleFeatures} onSelect={selectPoint} onNavigate={onNavigate} focus={focus} basemap={basemap} />
+        <MapView features={visibleFeatures} onSelect={selectPoint} onNavigate={onNavigate} focus={focus} basemap={basemap} userPos={userPos} />
         <Sidebar
           tab={tab}
           onTabChange={setTab}
@@ -134,6 +156,7 @@ export default function App() {
           onSelect={selectPoint}
           fiche={fiche}
           ficheLoading={ficheLoading}
+          userPos={userPos}
         />
       </main>
       <footer id="credits">

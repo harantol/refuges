@@ -1,6 +1,7 @@
 import { pointColor } from "../types";
+import { haversineKm } from "../geo";
 
-export default function Fiche({ fiche, loading }) {
+export default function Fiche({ fiche, loading, userPos }) {
   if (loading) return <div id="fiche-content"><p className="muted">Chargement de la fiche...</p></div>;
   if (!fiche) return <div id="fiche-content"><p className="muted">Cliquez sur un point de la carte pour voir sa fiche.</p></div>;
   if (fiche.error) return <div id="fiche-content"><p className="muted">Erreur : {fiche.error}</p></div>;
@@ -8,6 +9,12 @@ export default function Fiche({ fiche, loading }) {
   const p = fiche.properties || {};
   const color = pointColor(fiche);
   const infoComp = Object.values(p.info_comp || {}).filter((i) => i && i.valeur != null && i.valeur !== "");
+
+  let distTxt = "";
+  if (userPos != null && p.coord?.lat != null && p.coord?.long != null) {
+    const d = haversineKm(userPos, [p.coord.lat, p.coord.long]);
+    distTxt = ` · ${d < 10 ? d.toFixed(1) : Math.round(d) + " km"} de vous`;
+  }
 
   return (
     <div id="fiche-content">
@@ -17,6 +24,7 @@ export default function Fiche({ fiche, loading }) {
         <p className="kv">
           <b>Altitude :</b> {p.coord.alt != null ? p.coord.alt + " m" : "?"} · <b>Lat</b> {p.coord.lat}, <b>Long</b>{" "}
           {p.coord.long}
+          {distTxt}
         </p>
       )}
       {p.etat?.valeur && <p className="kv"><b>État :</b> {p.etat.valeur}</p>}

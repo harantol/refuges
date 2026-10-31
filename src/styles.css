@@ -110,6 +110,16 @@ main { flex: 1; display: flex; min-height: 0; }
   box-shadow: 0 0 3px #0008;
 }
 
+.user-dot {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #1f6feb;
+  border: 3px solid #fff;
+  box-shadow: 0 0 6px #1f6feb;
+}
+
 .marker-label {
   display: inline-block;
   padding: 1px 7px;

@@ -9,6 +9,8 @@ export default function Header({
   zoneActive,
   basemap,
   onBasemapChange,
+  onLocate,
+  located,
   status,
   allTypes,
   uncheckedTypes,
@@ -42,6 +44,14 @@ export default function Header({
             <option key={key} value={key}>{b.label}</option>
           ))}
         </select>
+        <button
+          id="btn-locate"
+          className={located ? "active" : ""}
+          onClick={onLocate}
+          title="Centrer la carte sur ma position et charger les refuges proches"
+        >
+          📍 Autour de moi
+        </button>
         <span id="status">{status}</span>
       </div>
       <TypeFilters allTypes={allTypes} uncheckedTypes={uncheckedTypes} onToggle={onToggleType} />

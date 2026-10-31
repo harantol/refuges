@@ -39,15 +39,25 @@ function MapEvents({ onNavigate }) {
   return null;
 }
 
-function FocusController({ focus }) {
+const userIcon = L.divIcon({
+  className: "",
+  html: '<span class="user-dot"></span>',
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
+});
+
+function FocusController({ focus, userPos }) {
   const map = useMap();
   useEffect(() => {
     if (focus) map.setView(focus, Math.max(map.getZoom(), 13));
   }, [focus, map]);
+  useEffect(() => {
+    if (userPos) map.setView(userPos, Math.max(map.getZoom(), 12));
+  }, [userPos, map]);
   return null;
 }
 
-export default function MapView({ features, onSelect, onNavigate, focus, basemap }) {
+export default function MapView({ features, onSelect, onNavigate, focus, basemap, userPos }) {
   const base = BASEMAPS[basemap] || BASEMAPS.osm;
   const markers = useMemo(
     () =>
@@ -68,7 +78,7 @@ export default function MapView({ features, onSelect, onNavigate, focus, basemap
         attribution={base.attribution}
       />
       <MapEvents onNavigate={onNavigate} />
-      <FocusController focus={focus} />
+      <FocusController focus={focus} userPos={userPos} />
       <MarkerClusterGroup showCoverageOnHover={false}>
         {markers.map((m) => (
           <Marker
@@ -79,6 +89,7 @@ export default function MapView({ features, onSelect, onNavigate, focus, basemap
           />
         ))}
       </MarkerClusterGroup>
+      {userPos && <Marker position={userPos} icon={userIcon} zIndexOffset={1000} />}
     </MapContainer>
   );
 }
