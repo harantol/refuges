@@ -1,5 +1,5 @@
-import { useState } from "react";
 import TypeFilters from "./TypeFilters";
+import IgnKeyForm from "./IgnKeyForm";
 import { BASEMAPS } from "../basemaps";
 
 export default function Header({
@@ -23,7 +23,6 @@ export default function Header({
   onToggleType,
   onIgnKeySave,
 }) {
-  const [ignKey, setIgnKey] = useState("");
   return (
     <header id="topbar">
       <h1>⛺ Explorateur Refuges.info</h1>
@@ -66,24 +65,7 @@ export default function Header({
           />
           Pentes
         </label>
-        {basemap === "ign" && (
-          <span className="ign-key-form" title="Par défaut, la clé partagée ign_scan_ws est utilisée. Collez ici votre clé perso (geoservices.ign.fr) pour un quota dédié.">
-            <input
-              id="ign-key-input"
-              type="password"
-              placeholder="Clé perso IGN (optionnel)…"
-              value={ignKey}
-              onChange={(e) => setIgnKey(e.target.value)}
-            />
-            <button
-              id="ign-key-save"
-              disabled={!ignKey.trim()}
-              onClick={() => onIgnKeySave?.(ignKey.trim())}
-            >
-              Enregistrer
-            </button>
-          </span>
-        )}
+        {basemap === "ign" && <IgnKeyForm onIgnKeySave={onIgnKeySave} />}
         <button
           id="btn-locate"
           className={located ? "active" : ""}

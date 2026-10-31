@@ -185,7 +185,8 @@ describe("App (intégration, fetch mocké)", () => {
   it("choisir IGN Top 25 affiche le formulaire de clé perso (clé partagée par défaut)", async () => {
     render(<App />);
     await screen.findByText("Refuge Test");
-    fireEvent.change(screen.getByTitle(/fond de carte/i), { target: { value: "ign" } });
+    // le select de fond du header (id basemap-select)
+    fireEvent.change(document.getElementById("basemap-select"), { target: { value: "ign" } });
     expect(await screen.findByPlaceholderText(/Clé perso IGN/)).toBeInTheDocument();
   });
 
@@ -194,10 +195,29 @@ describe("App (intégration, fetch mocké)", () => {
     await screen.findByText("Refuge Test");
     const map = screen.getByTestId("map");
     expect(map.getAttribute("data-hillshade")).toBe("false");
-    fireEvent.click(screen.getByLabelText(/Pentes/));
+    // la case Pentes existe dans le header (desktop) et dans le menu flottant (mobile)
+    const cases = screen.getAllByLabelText(/Pentes/);
+    fireEvent.click(cases[cases.length - 1]);
     expect(map.getAttribute("data-hillshade")).toBe("true");
-    fireEvent.click(screen.getByLabelText(/Pentes/));
+    fireEvent.click(screen.getAllByLabelText(/Pentes/)[0]);
     expect(map.getAttribute("data-hillshade")).toBe("false");
+  });
+
+  it("les contrôles flottants de la carte sont présents (fonds, zone, position, filtres)", async () => {
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    expect(screen.getByLabelText("Fond de carte")).toBeInTheDocument();
+    expect(screen.getByLabelText("Zone visible")).toBeInTheDocument();
+    expect(screen.getByLabelText("Autour de moi")).toBeInTheDocument();
+    expect(screen.getByLabelText("Filtres")).toBeInTheDocument();
+  });
+
+  it("le menu flottant 'Fond de carte' permet de changer de fond", async () => {
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    fireEvent.click(screen.getByLabelText("Fond de carte"));
+    fireEvent.click(screen.getByLabelText(/Satellite/));
+    expect(screen.getByTestId("map").getAttribute("data-basemap")).toBe("satellite");
   });
 
   it("au clic sur un point, charge et affiche sa fiche", async () => {
