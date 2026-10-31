@@ -85,6 +85,20 @@ describe("Header", () => {
     expect(screen.queryByPlaceholderText(/Clé perso IGN/)).toBeNull();
   });
 
+  it("l'icône compte 👤 est à droite du champ de recherche de massif", () => {
+    const props = makeProps({ accountOpen: true, onAccountToggle: vi.fn() });
+    const { container } = render(<Header {...props} />);
+    const row = container.querySelector(".massif-row");
+    expect(row).not.toBeNull();
+    expect(row.children[0].id).toBe("massif-search"); // le champ
+    expect(row.children[1].querySelector("#btn-account")).not.toBeNull(); // l'icône à droite
+    // le panneau compte s'ouvre (accountOpen=true)
+    expect(container.querySelector(".account-dropdown")).not.toBeNull();
+    // au clic sur 👤, onAccountToggle est appelé
+    fireEvent.click(screen.getByLabelText("Compte"));
+    expect(props.onAccountToggle).toHaveBeenCalled();
+  });
+
   it("affiche les filtres de type avec compteur", () => {
     render(<Header {...makeProps()} />);
     expect(screen.getByText(/refuge gardé/)).toBeInTheDocument();
