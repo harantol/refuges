@@ -26,6 +26,13 @@ export const fetchPointsByIds = (ids) =>
 export const fetchFiche = (id) =>
   apiFetch(`${API}/point?id=${id}&format=geojson&detail=fiche&format_texte=html`);
 
+// Détail complet (inclut info_comp) pour un lot d'ids — utilisé par la recherche
+// détaillée sur équipements, par paquets pour rester raisonnable.
+export const fetchPointsDetail = (ids) =>
+  apiFetch(
+    `${API}/point?id=${ids.join(",")}&format=geojson&detail=complet&format_texte=html&nb_points=all&cache=300`
+  );
+
 export const fetchMassifs = () =>
   apiFetch(`${API}/polygones?type_polygone=1&format=geojson&bbox=world`);
 

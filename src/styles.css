@@ -318,6 +318,8 @@ main { flex: 1; display: flex; min-height: 0; }
 }
 #search-panel .range-row { display: flex; gap: 10px; }
 #search-panel .range-row label { flex: 1; }
+#search-panel .equip-row { flex-direction: row !important; align-items: center; justify-content: space-between; gap: 10px; }
+#search-panel .equip-row select { min-width: 130px; }
 #search-panel .search-actions { display: flex; gap: 8px; }
 #search-panel .search-actions button {
   flex: 1;

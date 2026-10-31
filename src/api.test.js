@@ -4,6 +4,7 @@ import {
   fetchMassifPoints,
   fetchPointsByIds,
   fetchFiche,
+  fetchPointsDetail,
   fetchMassifs,
   fetchAllPoints,
 } from "./api";
@@ -51,6 +52,14 @@ describe("api refuges.info - construction des URLs", () => {
     const url = fetch.mock.calls[0][0];
     expect(url).toContain("/api/point?id=583");
     expect(url).toContain("detail=fiche");
+    expect(url).toContain("format_texte=html");
+  });
+
+  it("fetchPointsDetail : /api/point multi-ids en detail=complet format_texte=html", async () => {
+    await fetchPointsDetail([42, 43]);
+    const url = fetch.mock.calls[0][0];
+    expect(url).toContain("/api/point?id=42,43");
+    expect(url).toContain("detail=complet");
     expect(url).toContain("format_texte=html");
   });
 
