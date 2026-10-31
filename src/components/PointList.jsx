@@ -1,4 +1,4 @@
-import { pointColor } from "../types";
+import { pointColor, iconUrl } from "../types";
 import { haversineKm } from "../geo";
 
 export default function PointList({ features, filterText, onFilterChange, selectedId, onSelect, userPos, favorites, onToggleFavorite }) {
@@ -26,6 +26,7 @@ export default function PointList({ features, filterText, onFilterChange, select
             const km = d < 10 ? d.toFixed(1) : String(Math.round(d));
             dist = ` · ${km} km`;
           }
+          const icon = iconUrl(f);
           return (
             <li
               key={f.id}
@@ -33,7 +34,11 @@ export default function PointList({ features, filterText, onFilterChange, select
               className={f.id === selectedId ? "selected" : ""}
               onClick={() => onSelect(f.id)}
             >
-              <span className="dot" style={{ background: pointColor(f) }}></span>
+              {icon ? (
+                <img className="li-icon" src={icon} alt="" />
+              ) : (
+                <span className="dot" style={{ background: pointColor(f) }}></span>
+              )}
               <span className="item-body">
                 <span className="name">{p.nom || "(sans nom)"}</span>
                 <br />

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { pointColor } from "../types";
+import { pointColor, iconUrl } from "../types";
 import { haversineKm } from "../geo";
 import SafeHtml from "./SafeHtml";
 import Lightbox from "./Lightbox";
@@ -48,7 +48,10 @@ export default function Fiche({ fiche, loading, userPos, favorites, onToggleFavo
       >
         {favorites?.has(fiche.id) ? "★" : "☆"}
       </button>
-      <h2>{p.nom || "(sans nom)"}</h2>
+      <h2>
+        {iconUrl(fiche) && <img className="fiche-icon" src={iconUrl(fiche)} alt="" />}
+        {p.nom || "(sans nom)"}
+      </h2>
       {p.coord && (
         <p className="kv">
           <b>Altitude :</b> {p.coord.alt != null ? p.coord.alt + " m" : "?"} · <b>Lat</b> {p.coord.lat}, <b>Long</b>{" "}

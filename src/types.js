@@ -21,6 +21,28 @@ export const TYPE_LABELS = {
   29: "abri naturel / grotte",
 };
 
+// Icônes par défaut par type de point (correspondance_type_icone du code source refuges.info).
+// L'API renvoie le nom d'icône précis dans properties.type.icone (variantes combinées :
+// cabane_feu, cabane_eau_x...), on l'utilise en priorité.
+export const DEFAULT_TYPE_ICONS = {
+  3: "triangle_a33.10",
+  7: "cabane",
+  9: "cabane_green",
+  10: "cabane_red",
+  23: "pointdeau",
+  28: "cabane_white_black_a63",
+  29: "arc_lightgrey_black_manqueunmur",
+};
+
+const ICONS_BASE = "https://www.refuges.info/images/icones/";
+
+// URL de l'icône refuges.info d'un point, ou null si inconnue
+export const iconUrl = (feature) => {
+  const t = feature?.properties?.type;
+  const ic = t?.icone || DEFAULT_TYPE_ICONS[t?.id];
+  return ic ? `${ICONS_BASE}${ic}.png` : null;
+};
+
 // Champs info_comp tri-état (Oui / Non / Inconnu) filtrables en recherche détaillée.
 // Clés telles que renvoyées par l'API geojson (cf. champs_trinaires_points du code source).
 export const INFO_COMP_FIELDS = [

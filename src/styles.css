@@ -169,6 +169,16 @@ main { flex: 1; display: flex; min-height: 0; }
   box-shadow: 0 0 3px #0008;
 }
 
+/* icônes refuges.info */
+.marker-icon {
+  width: 28px;
+  height: 28px;
+  display: block;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+}
+.li-icon { width: 20px; height: 20px; flex: none; }
+.fiche-icon { width: 36px; height: 36px; vertical-align: -10px; margin-right: 8px; }
+
 .user-dot {
   display: block;
   width: 18px;
