@@ -80,3 +80,13 @@ npm test         # lancer les tests
 ## Licence des données
 
 Données refuges.info : CC BY-SA 2.0 · Icônes : © contributeurs refuges.info · Carte : © OpenStreetMap (ODbL) et fonds Esri/OpenTopoMap selon leurs licences respectives.
+
+## Design
+
+Thème inspiré de **Google Maps light** (voir `src/styles.css`, variables `--gm-*`) :
+Roboto, header blanc avec ombre, panneau latéral en carte flottante (radius 12 px),
+contrôles carte en boutons ronds blancs, onglets actifs en bleu `#1a73e8`,
+icônes SVG outline dans les contrôles carte (`src/components/icons.jsx`),
+icônes officielles refuges.info dans le menu filtres et sur la carte.
+L'API Google Maps n'est pas utilisée (payante, tuiles verrouillées) : on reprend
+son design system avec les tuiles OSM / OpenTopoMap / IGN (open data).
