@@ -76,8 +76,17 @@ html, body, #root {
 .controls button { cursor: pointer; }
 .controls button.active { background: var(--gm-blue-soft); border-color: transparent; color: var(--gm-blue); font-weight: 500; }
 
-/* champ recherche massif en "pill" + 👤 à droite de la page */
-.massif-row { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 180px; flex-wrap: nowrap; }
+/* champ recherche massif en "pill", largeur FIXE (max 260px, moins sur écran étroit
+   pour laisser la place au bouton 👤 à droite) */
+.massif-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 1 260px;
+  max-width: min(260px, calc(100% - 64px));
+  min-width: 140px;
+  flex-wrap: nowrap;
+}
 .massif-row #massif-search {
   flex: 1 1 auto;
   width: 100%;
@@ -546,10 +555,12 @@ main { flex: 1; display: flex; min-height: 0; }
 @media (max-width: 800px) {
   #topbar { padding: 6px 12px; gap: 8px; }
   #topbar h1 { font-size: 0.95rem; white-space: nowrap; }
-  .controls { gap: 6px; flex: 1; }
+  .controls { gap: 6px; flex: 1; flex-basis: 100%; } /* .controls sous le titre -> le champ a toute la largeur */
+  /* champ à largeur fixe bornée pour laisser le 👤 (absolute, à droite) */
+  .massif-row { flex: 0 1 auto; max-width: calc(100vw - 88px); min-width: 0; }
   .controls > button, .controls > select, #topbar #type-filters-wrap { display: none; }
-  /* champ à largeur fixe sur écran étroit : laisse la place au bouton 👤 (absolute, à droite) */
-  .massif-row { min-width: 0; flex: 0 1 auto; max-width: calc(100% - 64px); flex-wrap: nowrap; }
+  /* le champ passe sur sa propre ligne, largeur fixe bornée pour laisser le 👤 à droite */
+  .massif-row { flex-basis: 100%; max-width: calc(100vw - 88px); min-width: 0; }
   .massif-row #massif-search { min-height: 38px; font-size: 0.85rem; }
   #status { font-size: 0.75rem; width: 100%; }
   .account-wrap { top: 6px; right: 8px; }
@@ -573,6 +584,7 @@ main { flex: 1; display: flex; min-height: 0; }
   #sidebar .panel { display: none; }
   #sidebar.open { height: 55%; overflow: visible; border-radius: 16px 16px 0 0; }
   #sidebar.open .panel.active { display: block; }
+  #sidebar.fiche-open, #sidebar.open.fiche-open { width: 100%; min-width: 0; } /* largeur fixe = écran, même en fiche */
   #sidebar.open.fiche-open { height: 78%; }
 
   #sidebar-tabs { flex-wrap: nowrap; overflow: hidden; }
