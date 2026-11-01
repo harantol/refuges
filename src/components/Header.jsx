@@ -1,4 +1,3 @@
-import TypeLegend from "./TypeLegend";
 import AuthPanel from "./AuthPanel";
 import { IconUser } from "./icons";
 
@@ -81,7 +80,6 @@ export default function Header({
             )}
           </div>
       </div>
-      <TypeLegend />
     </header>
   );
 }
