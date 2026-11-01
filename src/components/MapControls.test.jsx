@@ -33,6 +33,16 @@ describe("MapControls (boutons flottants mobile)", () => {
     expect(filtres.querySelector("svg")).not.toBeNull(); // icône entonnoir SVG, pas un emoji
   });
 
+  it("tous les boutons ont une icône SVG outline (style Google Maps), pas d'emoji", () => {
+    const { container } = render(<MapControls {...makeProps()} />);
+    const boutons = container.querySelectorAll("#map-controls > button");
+    expect(boutons.length).toBe(4);
+    boutons.forEach((b) => {
+      expect(b.querySelector("svg")).not.toBeNull();
+      expect(b.textContent.trim()).toBe(""); // plus d'emoji texte
+    });
+  });
+
   it("la loupe est un interrupteur (aria-pressed) qui appelle onZoneOnlyToggle", () => {
     const props = makeProps({ zoneOnly: false });
     render(<MapControls {...props} />);

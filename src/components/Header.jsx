@@ -1,6 +1,7 @@
 import TypeFilters from "./TypeFilters";
 import TypeLegend from "./TypeLegend";
 import AuthPanel from "./AuthPanel";
+import { IconUser } from "./icons";
 
 export default function Header({
   massifs,
@@ -48,7 +49,7 @@ export default function Header({
               aria-label="Compte"
               onClick={onAccountToggle}
             >
-              👤
+              <IconUser size={20} />
             </button>
             {accountOpen && (
               <div className="account-dropdown">
