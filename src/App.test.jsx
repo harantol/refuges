@@ -490,6 +490,34 @@ describe("App (intégration, fetch mocké)", () => {
     expect(screen.queryByText("Email not confirmed")).toBeNull();
   });
 
+  it("une erreur cloud au toggle favori est affichée dans le statut (plus silencieuse)", async () => {
+    vi.stubEnv("VITE_SUPABASE_URL", "https://test.supabase.co");
+    vi.stubEnv("VITE_SUPABASE_ANON_KEY", "anon");
+    localStorage.setItem("cloud-auth-token", "tok");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url, opts = {}) => {
+        const u = String(url);
+        const json = (data, status = 200) => ({ ok: status < 400, status, json: async () => data });
+        if (u.startsWith("https://test.supabase.co")) {
+          if (u.includes("/auth/v1/user")) return json({ id: "u1", email: "a@b.c" });
+          if (u.includes("/rest/v1/favoris") && opts.method === "POST")
+            return json({ message: "column favoris.point_id does not exist" }, 400);
+          if (u.includes("/rest/v1/favoris")) return json([]);
+          return json({});
+        }
+        if (u.includes("/api/polygones")) return json(massifsData);
+        if (u.includes("/api/bbox")) return json(zoneData);
+        return json({ features: [] });
+      })
+    );
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    // connecté (session restaurée), on ajoute un favori -> POST cloud échoue
+    fireEvent.click(screen.getByTitle("Ajouter aux favoris"));
+    expect(await screen.findByText(/Erreur synchro cloud/)).toBeInTheDocument();
+  });
+
   it("le bouton ✕ efface la recherche et réaffiche la zone", async () => {
     render(<App />);
     await screen.findByText("Refuge Test");

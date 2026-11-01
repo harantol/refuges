@@ -25,8 +25,9 @@ via Supabase (REST pur, auth email + mot de passe). Bouton 👤 dans le header (
 ou dans les contrôles flottants (mobile).
 
 1. Créez un projet gratuit sur [supabase.com](https://supabase.com), activez l'email auth
-2. Dans l'éditeur SQL, créez la table :
+2. Dans l'éditeur SQL, créez/recréez la table (avec `drop` pour repartir propre) :
 ```sql
+drop table if exists favoris;
 create table favoris (
   user_id uuid references auth.users not null,
   point_id int not null,
@@ -36,6 +37,8 @@ alter table favoris enable row level security;
 create policy "own" on favoris for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 ```
+> ⚠️ Vérifié en réel : si la table existe déjà sans la bonne structure, les appels
+> renvoient `column favoris.point_id does not exist` (HTTP 400) → le `drop` est indispensable.
 3. Configurez le front (clé **anon publique**, par design) — valeurs dans Supabase :
    *Settings → API → Project URL* et *anon public key*.
 
