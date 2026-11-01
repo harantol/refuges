@@ -36,7 +36,22 @@ html, body, #root {
 
 #status { font-size: 0.85rem; opacity: 0.9; }
 
-#type-filters-wrap { font-size: 0.8rem; }
+/* les filtres occupent leur propre ligne -> la largeur de l'entête ne varie plus
+   quand les compteurs de types changent en déplaçant la carte */
+#type-filters-wrap { font-size: 0.8rem; flex-basis: 100%; }
+
+/* légende des icônes de types, en petit dans l'entête */
+#type-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 12px;
+  flex-basis: 100%;
+  font-size: 0.7rem;
+  opacity: 0.92;
+  padding-top: 2px;
+}
+#type-legend .legend-item { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+#type-legend .legend-item img { width: 16px; height: 16px; }
 #type-filters-wrap summary {
   cursor: pointer;
   background: #ffffff1a;
@@ -518,7 +533,8 @@ main { flex: 1; display: flex; min-height: 0; }
   .controls > select,
   .controls > #hillshade-toggle,
   .controls .ign-key-form,
-  #topbar #type-filters-wrap { display: none; }
+  #topbar #type-filters-wrap,
+  #topbar #type-legend { display: none; }
   #massif-search { min-width: 0; flex: 1; min-height: 38px; font-size: 0.85rem; padding: 6px 8px; }
   #status { font-size: 0.75rem; width: 100%; }
 

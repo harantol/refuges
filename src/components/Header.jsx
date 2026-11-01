@@ -1,4 +1,5 @@
 import TypeFilters from "./TypeFilters";
+import TypeLegend from "./TypeLegend";
 import IgnKeyForm from "./IgnKeyForm";
 import AuthPanel from "./AuthPanel";
 import { BASEMAPS } from "../basemaps";
@@ -123,6 +124,7 @@ export default function Header({
         <span id="status">{status}</span>
       </div>
       <TypeFilters allTypes={allTypes} typeCounts={typeCounts} uncheckedTypes={uncheckedTypes} onToggle={onToggleType} />
+      <TypeLegend />
     </header>
   );
 }

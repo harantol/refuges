@@ -23,7 +23,7 @@ export function makeIcon(feature) {
   });
 }
 
-function MapEvents({ onNavigate }) {
+function MapEvents({ onNavigate, onCloseMenus }) {
   const map = useMap();
   useEffect(() => {
     let timer = null;
@@ -36,12 +36,15 @@ function MapEvents({ onNavigate }) {
       timer = setTimeout(emit, 400);
     };
     map.on("moveend", handler);
+    // clic sur la carte (hors marqueurs) -> ferme les menus flottants
+    if (onCloseMenus) map.on("click", onCloseMenus);
     emit(); // chargement initial
     return () => {
       map.off("moveend", handler);
+      if (onCloseMenus) map.off("click", onCloseMenus);
       clearTimeout(timer);
     };
-  }, [map, onNavigate]);
+  }, [map, onNavigate, onCloseMenus]);
   return null;
 }
 
@@ -55,7 +58,11 @@ const userIcon = L.divIcon({
 function FocusController({ focus, userPos }) {
   const map = useMap();
   useEffect(() => {
-    if (focus) map.setView(focus, Math.max(map.getZoom(), 14)); // zoom 14 = marqueurs déclusterisés (icônes visibles)
+    if (!focus) return;
+    map.setView(focus, Math.max(map.getZoom(), 14)); // zoom 14 = marqueurs déclusterisés (icônes visibles)
+    // sur mobile, le panneau fiche recouvre le bas de la carte : remonter le point au-dessus
+    const isMobile = typeof window.matchMedia === "function" && window.matchMedia("(max-width: 800px)").matches;
+    if (isMobile) map.panBy([0, -Math.round(window.innerHeight * 0.35)]);
   }, [focus, map]);
   useEffect(() => {
     if (userPos) map.setView(userPos, Math.max(map.getZoom(), 12));
@@ -63,7 +70,7 @@ function FocusController({ focus, userPos }) {
   return null;
 }
 
-export default function MapView({ features, onSelect, onNavigate, focus, basemap, userPos, hillshade }) {
+export default function MapView({ features, onSelect, onNavigate, onCloseMenus, focus, basemap, userPos, hillshade }) {
   const base = BASEMAPS[basemap] || BASEMAPS.topo;
   const markers = useMemo(
     () =>
@@ -76,7 +83,7 @@ export default function MapView({ features, onSelect, onNavigate, focus, basemap
   );
 
   return (
-    <MapContainer center={[45.7, 6.4]} zoom={9} id="map">
+    <MapContainer center={[45.7, 6.4]} zoom={9} id="map" zoomControl={false}>
       <TileLayer
         key={basemap}
         url={base.url}
@@ -93,7 +100,7 @@ export default function MapView({ features, onSelect, onNavigate, focus, basemap
           pane="overlayPane"
         />
       )}
-      <MapEvents onNavigate={onNavigate} />
+      <MapEvents onNavigate={onNavigate} onCloseMenus={onCloseMenus} />
       <FocusController focus={focus} userPos={userPos} />
       <MarkerClusterGroup showCoverageOnHover={false} disableClusteringAtZoom={14}>
         {markers.map((m) => (

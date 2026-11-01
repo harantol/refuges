@@ -7,15 +7,23 @@ import { TYPE_LABELS } from "./types";
 vi.mock("./components/MapView", async () => {
   const React = await import("react");
   return {
-    default: ({ onNavigate, basemap, hillshade }) => {
+    default: ({ onNavigate, basemap, hillshade, onCloseMenus }) => {
       React.useEffect(() => {
         onNavigate("6.0,45.5,7.0,46.0");
       }, [onNavigate]);
-      return React.createElement("div", {
-        "data-testid": "map",
-        "data-basemap": basemap,
-        "data-hillshade": String(Boolean(hillshade)),
-      });
+      return React.createElement(
+        "div",
+        {
+          "data-testid": "map",
+          "data-basemap": basemap,
+          "data-hillshade": String(Boolean(hillshade)),
+        },
+        React.createElement(
+          "button",
+          { "data-testid": "map-click", onClick: onCloseMenus },
+          "clic carte"
+        )
+      );
     },
   };
 });
@@ -227,6 +235,15 @@ describe("App (intégration, fetch mocké)", () => {
     fireEvent.click(screen.getByLabelText("Fond de carte"));
     fireEvent.click(screen.getByLabelText(/Satellite/));
     expect(screen.getByTestId("map").getAttribute("data-basemap")).toBe("satellite");
+  });
+
+  it("un clic sur la carte ferme les menus flottants ouverts", async () => {
+    const { container } = render(<App />);
+    await screen.findByText("Refuge Test");
+    fireEvent.click(screen.getByLabelText("Fond de carte"));
+    expect(container.querySelector(".map-menu")).not.toBeNull();
+    fireEvent.click(screen.getByTestId("map-click")); // clic sur la carte
+    expect(container.querySelector(".map-menu")).toBeNull();
   });
 
   it("au clic sur un point, charge et affiche sa fiche", async () => {

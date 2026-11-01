@@ -578,7 +578,7 @@ export default function App() {
       />
       <main>
         <div id="map-area">
-          <MapView features={displayedFeatures} onSelect={selectPoint} onNavigate={onNavigate} focus={focus} basemap={basemap} userPos={userPos} hillshade={hillshade} />
+          <MapView features={displayedFeatures} onSelect={selectPoint} onNavigate={onNavigate} onCloseMenus={() => setMapMenu(null)} focus={focus} basemap={basemap} userPos={userPos} hillshade={hillshade} />
           <MapControls
             basemap={basemap}
             onBasemapChange={changeBasemap}
