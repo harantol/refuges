@@ -58,7 +58,13 @@ export default function AuthPanel({ user, busy, error, onLogin, onSignup, onLogo
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
-      {(err || error) && <p className="auth-error">{err || error}</p>}
+      {(err || error) && (
+        <p className="auth-error">
+          {/not confirmed/i.test(err || error)
+            ? "Email non confirmé — cliquez sur le lien reçu par mail, puis reconnectez-vous."
+            : err || error}
+        </p>
+      )}
       <div className="auth-actions">
         <button className="auth-btn primary" disabled={busy || !email || !password} onClick={() => submit("login")}>
           Connexion
