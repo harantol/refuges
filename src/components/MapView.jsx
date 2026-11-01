@@ -70,14 +70,36 @@ function BoundsController({ features, fitToFeatures }) {
   return null;
 }
 
+// Décalage vertical (px) à appliquer au centre de la carte en mobile pour que le point
+// cliqué apparaisse au milieu de la zone visible (haut de la carte -> haut du panneau).
+// offset > 0 = le centre part vers le sud = le point monte à l'écran.
+export function mobileFocusOffsetPx(mapHeight, panelHeight) {
+  const visibleBottom = Math.max(60, mapHeight - panelHeight); // zone visible min 60px
+  return mapHeight / 2 - visibleBottom / 2;
+}
+
 function FocusController({ focus, userPos }) {
   const map = useMap();
   useEffect(() => {
     if (!focus) return;
-    map.setView(focus, Math.max(map.getZoom(), 14)); // zoom 14 = marqueurs déclusterisés (icônes visibles)
-    // sur mobile, le panneau fiche recouvre le bas de la carte : remonter le point au-dessus
+    const zoom = Math.max(map.getZoom(), 14); // zoom 14 = marqueurs déclusterisés (icônes visibles)
+    // Sur mobile, le panneau du bas (fiche = 78%, liste = 55% de la hauteur) recouvre la carte :
+    // on décale le centre vers le sud pour que le point cliqué apparaisse DANS la zone visible
+    // (entre le haut de la carte et le panneau), et non derrière le panneau.
     const isMobile = typeof window.matchMedia === "function" && window.matchMedia("(max-width: 800px)").matches;
-    if (isMobile) map.panBy([0, -Math.round(window.innerHeight * 0.35)]);
+    if (isMobile) {
+      const size = map.getSize();
+      const sidebar = document.getElementById("sidebar");
+      let sideH = 48; // panneau replié (juste les onglets)
+      if (sidebar?.classList.contains("fiche-open")) sideH = Math.round(size.y * 0.78);
+      else if (sidebar?.classList.contains("open")) sideH = Math.round(size.y * 0.55);
+      const offset = mobileFocusOffsetPx(size.y, sideH); // > 0 : le point monte à l'écran
+      // calcul en projection au zoom cible (un panBy en px dépendrait du zoom courant)
+      const center = map.unproject(map.project(focus, zoom).add([0, offset]), zoom);
+      map.setView(center, zoom);
+    } else {
+      map.setView(focus, zoom);
+    }
   }, [focus, map]);
   useEffect(() => {
     if (userPos) map.setView(userPos, Math.max(map.getZoom(), 12));

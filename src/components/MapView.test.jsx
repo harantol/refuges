@@ -1,6 +1,23 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { makeIcon } from "./MapView";
+import { makeIcon, mobileFocusOffsetPx } from "./MapView";
+
+describe("mobileFocusOffsetPx (fiche mobile : le point cliqué doit rester visible)", () => {
+  it("offset nul sans panneau (le point reste centré)", () => {
+    expect(mobileFocusOffsetPx(800, 0)).toBe(0);
+  });
+  it("offset positif avec panneau : le point monte au-dessus du panneau", () => {
+    // fiche ouverte = 78% de 734px -> zone visible [0, 161.5], milieu 80.75
+    const sideH = Math.round(734 * 0.78); // 573
+    const off = mobileFocusOffsetPx(734, sideH);
+    expect(off).toBeGreaterThan(0);
+    expect(734 / 2 - off).toBeCloseTo((734 - sideH) / 2, 5); // le point atterrit au milieu de la zone visible
+  });
+  it("zone visible jamais sous 60px même avec un panneau énorme", () => {
+    const off = mobileFocusOffsetPx(800, 790);
+    expect(800 / 2 - off).toBe(30); // milieu de la zone [0, 60]
+  });
+});
 
 describe("styles des marqueurs (régression décalage au zoom)", () => {
   // Leaflet positionne les divIcon avec transform: translate3d + marges négatives.
