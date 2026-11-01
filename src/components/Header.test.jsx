@@ -8,16 +8,16 @@ const makeProps = (overrides = {}) => ({
   onMassifQueryChange: vi.fn(),
   onZoneClick: vi.fn(),
   zoneActive: true,
-  status: "Prêt",
   ...overrides,
 });
 
 describe("Header", () => {
-  it("rend tous les contrôles et affiche le statut", () => {
+  it("rend tous les contrôles, sans aucun texte de statut (hauteur d'entête fixe)", () => {
     render(<Header {...makeProps()} />);
     expect(screen.getByPlaceholderText(/massif/i)).toBeInTheDocument();
     expect(screen.getByText("Zone visible")).toBeInTheDocument();
-    expect(screen.getByText("Prêt")).toBeInTheDocument();
+    // régression : un #status dans l'entête faisait varier sa hauteur et décalait la carte (mobile)
+    expect(document.querySelector("#status")).toBeNull();
     expect(document.querySelector('#massifs-list option[value="Vanoise"]')).not.toBeNull(); // datalist
   });
 

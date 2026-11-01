@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Header from "./components/Header";
 import MapView from "./components/MapView";
 import MapControls from "./components/MapControls";
+import MapStatus from "./components/MapStatus";
 import Sidebar from "./components/Sidebar";
 import { TYPE_LABELS } from "./types";
 import { fetchZone, fetchMassifPoints, fetchPointsByIds, fetchFiche, fetchMassifs, fetchAllPoints, fetchAllPointsDetail } from "./api";
@@ -24,6 +25,15 @@ export default function App() {
   const [features, setFeatures] = useState([]);
   const [total, setTotal] = useState(0);
   const [status, setStatus] = useState("Chargement…");
+  // chargement en cours -> spinner sur la carte (jamais de texte dans l'entête, ça le fait grandir)
+  const loading = /chargement|en cours|recherche dans/i.test(status);
+
+  // les messages info/erreur (toast sur la carte) s'effacent tout seuls au bout de 5 s
+  useEffect(() => {
+    if (!status || loading) return;
+    const t = setTimeout(() => setStatus(""), 5000);
+    return () => clearTimeout(t);
+  }, [status, loading]);
   const [massifs, setMassifs] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [fiche, setFiche] = useState(null);
@@ -570,11 +580,11 @@ export default function App() {
         onLogin={handleLogin}
         onSignup={handleSignup}
         onLogout={handleLogout}
-        status={status}
       />
       <main>
         <div id="map-area">
           <MapView features={displayedFeatures} onSelect={selectPoint} onNavigate={onNavigate} onCloseMenus={() => { setMapMenu(null); setPanelOpen(false); }} focus={focus} basemap={basemap} userPos={userPos} hillshade={hillshade} fitToFeatures={mode.type === "massif"} />
+          <MapStatus loading={loading} status={status} />
           <MapControls
             basemap={basemap}
             onBasemapChange={changeBasemap}
