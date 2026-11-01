@@ -57,19 +57,27 @@ async function req(path, { method = "GET", body, auth = false } = {}) {
   });
   // Lire le texte d'abord : Supabase renvoie 201/204 avec un body VIDE sur les
   // écritures sans "Prefer: return=representation" -> res.json() planterait
-  // ("unexpected end of data")
-  const text = await res.text();
+  // ("unexpected end of data"). Fallback sur res.json() si pas de text() (mocks).
+  const text = typeof res.text === "function" ? await res.text() : "";
   if (!res.ok) {
     let msg = "HTTP " + res.status;
     try {
-      const j = JSON.parse(text);
+      const j = text ? JSON.parse(text) : await res.json();
       msg = j.message || j.error_description || j.msg || msg;
     } catch {
       /* body non JSON */
     }
     throw new Error(msg);
   }
-  return text ? JSON.parse(text) : null;
+  if (text) return JSON.parse(text);
+  if (typeof res.json === "function") {
+    try {
+      return await res.json();
+    } catch {
+      return null; // body vide (201/204)
+    }
+  }
+  return null;
 }
 
 export const auth = {
