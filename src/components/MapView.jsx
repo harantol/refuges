@@ -17,7 +17,7 @@ export function makeIcon(feature) {
     : `<span class="dot" style="background:${color}"></span>`;
   return L.divIcon({
     className: "marker-wrap",
-    html: `${picto}<span class="marker-label" style="border-color:${color};color:${color}">${nom}</span>`,
+    html: `<span data-pid="${feature.id}" style="display:contents">${picto}<span class="marker-label" style="border-color:${color};color:${color}">${nom}</span></span>`,
     iconSize: [30, 30], // conteneur fixe = taille de l'icône, le label dépasse en dessous
     iconAnchor: [15, 15], // ancré pile au centre du point GPS
   });

@@ -272,6 +272,7 @@ export default function App() {
   const displayedRef = useRef([]);
   useEffect(() => {
     displayedRef.current = displayedFeatures;
+    window.__features = displayedFeatures; // debug/tests
   }, [displayedFeatures]);
 
   const toggleType = useCallback((id, checked) => {
@@ -286,6 +287,7 @@ export default function App() {
   const selectPoint = useCallback((id) => {
     setSelectedId(id);
     setTab("fiche");
+    setPanelOpen(true); // sur mobile, déplier le panneau pour voir la fiche
     setFiche(null);
     setFicheLoading(true);
     try {

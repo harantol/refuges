@@ -255,11 +255,12 @@ describe("App (intégration, fetch mocké)", () => {
     expect(document.getElementById("sidebar").className).not.toContain("open");
   });
 
-  it("au clic sur un point, charge et affiche sa fiche", async () => {
+  it("au clic sur un point, charge sa fiche ET déplie le panneau (visible sur mobile)", async () => {
     render(<App />);
     fireEvent.click(await screen.findByText("Refuge Test"));
     expect(await screen.findByText(/2000 m/)).toBeInTheDocument();
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining("detail=fiche"));
+    expect(document.getElementById("sidebar").className).toContain("open"); // panneau déplié
   });
 
   it("la fiche récupère type.id/icone depuis la feature d'origine (absents du detail=fiche)", async () => {
