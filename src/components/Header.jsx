@@ -7,8 +7,6 @@ export default function Header({
   onMassifQueryChange,
   onZoneClick,
   zoneActive,
-  recentDays,
-  onRecentChange,
   status,
   user,
   accountOpen,
@@ -42,18 +40,6 @@ export default function Header({
           Zone visible
         </button>
         {/* fond de carte + pentes + clé IGN : dans le menu flottant 🗺️ sur la carte (MapControls) */}
-        <select
-          id="recent-select"
-          value={recentDays}
-          onChange={(e) => onRecentChange(Number(e.target.value))}
-          title="Ne garder que les points modifiés récemment (paramètre depuis de l'API)"
-        >
-          <option value={0}>Toutes les dates</option>
-          <option value={7}>Modifié depuis 7 j</option>
-          <option value={30}>Modifié depuis 30 j</option>
-          <option value={90}>Modifié depuis 90 j</option>
-          <option value={365}>Modifié depuis 1 an</option>
-        </select>
         <span id="status">{status}</span>
 
         <div className="account-wrap">

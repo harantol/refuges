@@ -359,8 +359,8 @@ describe("App (intégration, fetch mocké)", () => {
     // décocher un type absent de la zone courante
     fireEvent.click(filters.getByLabelText(/cabane non gardée/));
     expect(filters.getByLabelText(/cabane non gardée/)).not.toBeChecked();
-    // simuler un rechargement (changement du zoom => nouveau chargement via le filtre 'depuis')
-    fireEvent.change(screen.getByTitle(/modifiés récemment/i), { target: { value: "30" } });
+    // simuler un rechargement via le filtre 'depuis' (menu entonnoir déjà ouvert)
+    fireEvent.change(screen.getByLabelText(/Modifié depuis/), { target: { value: "30" } });
     await waitFor(() =>
       expect(fetch).toHaveBeenCalledWith(expect.stringContaining("depuis=-2592000"))
     );
@@ -548,10 +548,11 @@ describe("App (intégration, fetch mocké)", () => {
     );
   });
 
-  it("le filtre 'modifié depuis' ajoute le paramètre depuis", async () => {
+  it("le filtre 'modifié depuis' (menu entonnoir de la carte) ajoute le paramètre depuis", async () => {
     render(<App />);
     await screen.findByText("Refuge Test");
-    fireEvent.change(screen.getByTitle(/modifiés récemment/i), { target: { value: "30" } });
+    fireEvent.click(screen.getByLabelText("Filtres")); // ouvre le menu filtres
+    fireEvent.change(screen.getByLabelText(/Modifié depuis/), { target: { value: "30" } });
     await waitFor(() =>
       expect(fetch).toHaveBeenCalledWith(expect.stringContaining("depuis=-2592000"))
     );

@@ -8,8 +8,6 @@ const makeProps = (overrides = {}) => ({
   onMassifQueryChange: vi.fn(),
   onZoneClick: vi.fn(),
   zoneActive: true,
-  recentDays: 0,
-  onRecentChange: vi.fn(),
   status: "Prêt",
   ...overrides,
 });
@@ -19,7 +17,6 @@ describe("Header", () => {
     render(<Header {...makeProps()} />);
     expect(screen.getByPlaceholderText(/massif/i)).toBeInTheDocument();
     expect(screen.getByText("Zone visible")).toBeInTheDocument();
-    expect(screen.getByTitle(/modifiés récemment/i)).toBeInTheDocument();
     expect(screen.getByText("Prêt")).toBeInTheDocument();
     expect(document.querySelector('#massifs-list option[value="Vanoise"]')).not.toBeNull(); // datalist
   });
@@ -31,8 +28,6 @@ describe("Header", () => {
     expect(props.onMassifQueryChange).toHaveBeenCalledWith("Van");
     fireEvent.click(screen.getByText("Zone visible"));
     expect(props.onZoneClick).toHaveBeenCalled();
-    fireEvent.change(screen.getByTitle(/modifiés récemment/i), { target: { value: "30" } });
-    expect(props.onRecentChange).toHaveBeenCalledWith(30);
   });
 
   it("le bouton zone a la classe active quand zoneActive", () => {
