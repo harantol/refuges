@@ -99,9 +99,20 @@ describe("Header", () => {
     expect(props.onAccountToggle).toHaveBeenCalled();
   });
 
+  it("affiche la légende des icônes de types dans l'entête (7 icônes refuges.info)", () => {
+    const { container } = render(<Header {...makeProps()} />);
+    const legend = container.querySelector("#type-legend");
+    expect(legend).not.toBeNull();
+    const imgs = legend.querySelectorAll("img");
+    expect(imgs.length).toBe(7);
+    expect(imgs[0].getAttribute("src")).toContain("https://www.refuges.info/images/icones/");
+    expect(legend.textContent).toContain("refuge gardé");
+  });
+
   it("affiche les filtres de type avec compteur", () => {
-    render(<Header {...makeProps()} />);
-    expect(screen.getByText(/refuge gardé/)).toBeInTheDocument();
-    expect(screen.getByText("2")).toBeInTheDocument();
+    const { container } = render(<Header {...makeProps()} />);
+    const filters = container.querySelector("#type-filters");
+    expect(filters.textContent).toContain("refuge gardé");
+    expect(filters.textContent).toContain("2");
   });
 });
