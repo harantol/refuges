@@ -559,7 +559,8 @@ main { flex: 1; display: flex; min-height: 0; }
   #topbar h1 { font-size: 0.95rem; white-space: nowrap; }
   .controls { gap: 6px; flex: 1; }
   .controls > button, .controls > select, #topbar #type-filters-wrap, #topbar #type-legend { display: none; }
-  .massif-row { min-width: 0; flex-wrap: nowrap; }
+  /* champ à largeur fixe sur écran étroit : laisse la place au bouton 👤 (absolute, à droite) */
+  .massif-row { min-width: 0; flex: 0 1 auto; max-width: calc(100% - 64px); flex-wrap: nowrap; }
   .massif-row #massif-search { min-height: 38px; font-size: 0.85rem; }
   #status { font-size: 0.75rem; width: 100%; }
   .account-wrap { top: 6px; right: 8px; }
