@@ -272,6 +272,7 @@ export default function App() {
   const displayedRef = useRef([]);
   useEffect(() => {
     displayedRef.current = displayedFeatures;
+    window.__features = displayedFeatures; // debug/tests
   }, [displayedFeatures]);
 
   const toggleType = useCallback((id, checked) => {

@@ -1,5 +1,18 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
 import { makeIcon } from "./MapView";
+
+describe("styles des marqueurs (régression décalage au zoom)", () => {
+  // Leaflet positionne les divIcon avec transform: translate3d + marges négatives.
+  // Si .marker-wrap repasse en position:relative/static (règle CSS après leaflet.css),
+  // les marqueurs retombent dans le flux du marker-pane et se décalent cumulativement.
+  const css = readFileSync("src/styles.css", "utf8"); // cwd = racine projet sous vitest
+  const rule = css.match(/\.marker-wrap\s*\{[^}]*\}/);
+  it(".marker-wrap garde position:absolute", () => {
+    expect(rule).toBeTruthy();
+    expect(rule[0]).toMatch(/position:\s*absolute/);
+  });
+});
 
 describe("makeIcon (marqueur carte)", () => {
   it("icône refuges.info au-dessus du label (colonne, pas de superposition)", () => {
