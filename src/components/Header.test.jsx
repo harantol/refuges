@@ -8,10 +8,6 @@ const makeProps = (overrides = {}) => ({
   onMassifQueryChange: vi.fn(),
   onZoneClick: vi.fn(),
   zoneActive: true,
-  basemap: "osm",
-  onBasemapChange: vi.fn(),
-  hillshade: false,
-  onHillshadeChange: vi.fn(),
   onLocate: vi.fn(),
   located: false,
   recentDays: 0,
@@ -21,7 +17,6 @@ const makeProps = (overrides = {}) => ({
   typeCounts: new Map([[10, 2]]),
   uncheckedTypes: new Set(),
   onToggleType: vi.fn(),
-  onIgnKeySave: vi.fn(),
   ...overrides,
 });
 
@@ -30,7 +25,6 @@ describe("Header", () => {
     render(<Header {...makeProps()} />);
     expect(screen.getByPlaceholderText(/massif/i)).toBeInTheDocument();
     expect(screen.getByText("Zone visible")).toBeInTheDocument();
-    expect(screen.getByTitle(/fond de carte/i)).toBeInTheDocument();
     expect(screen.getByText(/Autour de moi/)).toBeInTheDocument();
     expect(screen.getByTitle(/modifiés récemment/i)).toBeInTheDocument();
     expect(screen.getByText("Prêt")).toBeInTheDocument();
@@ -44,8 +38,6 @@ describe("Header", () => {
     expect(props.onMassifQueryChange).toHaveBeenCalledWith("Van");
     fireEvent.click(screen.getByText("Zone visible"));
     expect(props.onZoneClick).toHaveBeenCalled();
-    fireEvent.change(screen.getByTitle(/fond de carte/i), { target: { value: "satellite" } });
-    expect(props.onBasemapChange).toHaveBeenCalledWith("satellite");
     fireEvent.click(screen.getByText(/Autour de moi/));
     expect(props.onLocate).toHaveBeenCalled();
     fireEvent.change(screen.getByTitle(/modifiés récemment/i), { target: { value: "30" } });
@@ -60,29 +52,6 @@ describe("Header", () => {
   it("le bouton locate a la classe active quand located", () => {
     render(<Header {...makeProps({ located: true })} />);
     expect(screen.getByText(/Autour de moi/)).toHaveClass("active");
-  });
-
-  it("la case à cocher Pentes appelle onHillshadeChange", () => {
-    const props = makeProps();
-    render(<Header {...props} />);
-    const cb = screen.getByLabelText(/Pentes/);
-    expect(cb).not.toBeChecked();
-    fireEvent.click(cb);
-    expect(props.onHillshadeChange).toHaveBeenCalledWith(true);
-  });
-
-  it("affiche le formulaire de clé perso quand IGN Top 25 est choisi, et appelle onIgnKeySave", () => {
-    const props = makeProps({ basemap: "ign" });
-    render(<Header {...props} />);
-    const input = screen.getByPlaceholderText(/Clé perso IGN/);
-    fireEvent.change(input, { target: { value: "ma-cle-123" } });
-    fireEvent.click(screen.getByText("Enregistrer"));
-    expect(props.onIgnKeySave).toHaveBeenCalledWith("ma-cle-123");
-  });
-
-  it("pas de formulaire de clé sur un autre fond", () => {
-    render(<Header {...makeProps({ basemap: "osm" })} />);
-    expect(screen.queryByPlaceholderText(/Clé perso IGN/)).toBeNull();
   });
 
   it("l'icône compte 👤 est à droite du champ de recherche de massif", () => {

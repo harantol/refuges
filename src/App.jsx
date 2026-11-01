@@ -553,11 +553,6 @@ export default function App() {
         onMassifQueryChange={onMassifQueryChange}
         onZoneClick={onZoneClick}
         zoneActive={mode.type === "zone"}
-        basemap={basemap}
-        onBasemapChange={changeBasemap}
-        hillshade={hillshade}
-        onHillshadeChange={setHillshade}
-        onIgnKeySave={saveIgnKey}
         user={user}
         accountOpen={accountOpen}
         onAccountToggle={() => setAccountOpen((v) => !v)}

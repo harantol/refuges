@@ -7,11 +7,16 @@
 //   alter table favoris enable row level security;
 //   create policy "own" on favoris for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+// Normalise l'URL du projet (trim + sans slash final, sinon Supabase renvoie
+// "Invalid path specified in request URL" à cause du double slash)
+const cleanUrl = (u) => (u || "").trim().replace(/\/+$/, "");
+
 const cfg = () => ({
-  url:
+  url: cleanUrl(
     (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_URL) ||
-    (typeof localStorage !== "undefined" && localStorage.getItem("supabase-url")) ||
-    "",
+      (typeof localStorage !== "undefined" && localStorage.getItem("supabase-url")) ||
+      ""
+  ),
   key:
     (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_ANON_KEY) ||
     (typeof localStorage !== "undefined" && localStorage.getItem("supabase-anon-key")) ||

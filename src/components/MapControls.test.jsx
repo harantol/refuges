@@ -64,6 +64,12 @@ describe("MapControls (boutons flottants mobile)", () => {
     expect(props.onRecentChange).toHaveBeenCalledWith(30);
   });
 
+  it("dans le menu fonds, choisir IGN Top 25 affiche le formulaire de clé perso", () => {
+    const props = makeProps({ menu: "basemap", basemap: "ign" });
+    render(<MapControls {...props} />);
+    expect(screen.getByPlaceholderText(/Clé perso IGN/)).toBeInTheDocument();
+  });
+
   it("clic sur le bouton actif referme le menu (toggle)", () => {
     const props = makeProps({ menu: "basemap" });
     render(<MapControls {...props} />);
