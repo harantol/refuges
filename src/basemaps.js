@@ -46,14 +46,6 @@ export const BASEMAPS = {
     attribution: "&copy; <a href='https://geoservices.ign.fr/'>IGN</a> — Plan IGN v2 (open data)",
     maxZoom: 18,
   },
-  // BDUNI J1 : fond de carte vectoriel officiel du portail IGN, open data sans clé
-  // (vérifié : HTTP 200, PNG 8 Ko sans clé, tuile Mont Blanc z14)
-  bduni: {
-    label: "IGN BDUNI J1 (officiel, sans clé)",
-    url: "https://data.geopf.fr/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&LAYER=GEOGRAPHICALGRIDSYSTEMS.MAPS.BDUNI.J1&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}",
-    attribution: "&copy; <a href='https://geoservices.ign.fr/'>IGN</a> — BDUNI J1 (open data)",
-    maxZoom: 18,
-  },
   // Top 25 raster (SCAN25) : plus servie sur l'endpoint public ("Layer unknown"),
   // mais accessible sur private/wmts avec apikey (clé partagée ign_scan_ws par défaut)
   ign: {

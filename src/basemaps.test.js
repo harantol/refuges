@@ -13,12 +13,6 @@ describe("basemaps", () => {
     expect(BASEMAPS.planign.url).toContain("{z}");
   });
 
-  it("BDUNI J1 (fond vectoriel officiel) est open data sans clé", () => {
-    expect(BASEMAPS.bduni.url).toContain("GEOGRAPHICALGRIDSYSTEMS.MAPS.BDUNI.J1");
-    expect(BASEMAPS.bduni.url).not.toContain("key=");
-    expect(BASEMAPS.bduni.url).toContain("data.geopf.fr/wmts"); // endpoint public
-  });
-
   it("IGN Top 25 passe par private/wmts avec apikey (clé partagée ign_scan_ws par défaut)", () => {
     expect(BASEMAPS.ign.url).toContain("GEOGRAPHICALGRIDSYSTEMS.MAPS");
     expect(BASEMAPS.ign.url).toContain("private/wmts");
