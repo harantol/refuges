@@ -38,9 +38,11 @@ create policy "own" on favoris for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 -- indispensable sinon 42501 'permission denied for table favoris' :
 grant select, insert, update, delete on favoris to anon;
+-- indispensable aussi pour les utilisateurs CONNECTÉS (rôle 'authenticated') :
+grant select, insert, update, delete on public.favoris to authenticated;
 ```
 > ⚠️ Vérifié en réel : sans `drop`, erreur `column favoris.point_id does not exist` (400) ;
-> sans le `GRANT … TO anon`, erreur `permission denied for table favoris` (42501, 401).
+> sans `GRANT … TO anon` → 42501 pour les requêtes anonymes ; sans `GRANT … TO authenticated` → 42501 **pour les utilisateurs connectés** (leur rôle est `authenticated`, pas `anon`).
 3. Configurez le front (clé **anon publique**, par design) — valeurs dans Supabase :
    *Settings → API → Project URL* et *anon public key*.
 
