@@ -56,6 +56,16 @@ describe("AuthPanel", () => {
     expect(screen.getByText("Créer un compte")).toBeVisible();
   });
 
+  it("'Email not confirmed' est reformulé en message clair", () => {
+    vi.stubEnv("VITE_SUPABASE_URL", "https://test.supabase.co");
+    vi.stubEnv("VITE_SUPABASE_ANON_KEY", "k");
+    render(
+      <AuthPanel user={null} busy={false} error="Email not confirmed" onLogin={() => {}} onSignup={() => {}} onLogout={() => {}} />
+    );
+    expect(screen.getByText(/Email non confirmé/i)).toBeInTheDocument();
+    expect(screen.queryByText("Email not confirmed")).toBeNull();
+  });
+
   it("affiche l'erreur renvoyée", () => {
     vi.stubEnv("VITE_SUPABASE_URL", "https://test.supabase.co");
     vi.stubEnv("VITE_SUPABASE_ANON_KEY", "k");
