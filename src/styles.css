@@ -24,24 +24,6 @@ html, body, #root {
 
 .controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-/* champ recherche de massif + icône compte 👤 à sa droite */
-.massif-row { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 180px; position: relative; }
-.massif-row #massif-search { flex: 1; min-width: 0; }
-.massif-row .account-wrap { position: relative; flex: none; }
-#btn-account {
-  width: 40px;
-  height: 40px;
-  flex: none;
-  border: none;
-  border-radius: 8px;
-  background: #ffffff22;
-  color: #fff;
-  font-size: 1.05rem;
-  cursor: pointer;
-  line-height: 1;
-}
-#btn-account.active { background: #fff; color: #1f4e3d; }
-
 .controls select, .controls button, #filter-text {
   padding: 6px 10px;
   border: none;
@@ -602,8 +584,7 @@ main { flex: 1; display: flex; min-height: 0; }
   #search-panel .range-row { flex-direction: column; gap: 6px; }
   #search-panel .search-actions button { min-height: 42px; }
 
-  /* la sidebar devient un panneau coulissant par-dessus la carte,
-     REPLIÉ par défaut (seule la barre d'onglets) et déplié au clic sur un onglet */
+  /* la sidebar devient un panneau coulissant par-dessus la carte */
   #sidebar {
     position: absolute;
     bottom: 0;
@@ -611,25 +592,31 @@ main { flex: 1; display: flex; min-height: 0; }
     right: 0;
     width: 100%;
     min-width: 0;
-    height: 46px;
-    overflow: hidden;
-    transition: height 0.18s ease;
+    height: 45%;
     border-left: none;
     border-top: 1px solid #ccc;
     box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.25);
     z-index: 1001;
   }
-  #sidebar .panel { display: none; }
-  #sidebar.open { height: 55%; overflow: visible; }
-  #sidebar.open .panel.active { display: block; }
-  /* la fiche occupe plus de hauteur quand dépliée */
-  #sidebar.open.fiche-open { height: 78%; }
+  /* la fiche occupe plus de hauteur sur mobile */
+  #sidebar.fiche-open { width: 100%; min-width: 0; height: 68%; }
 
   /* marqueurs plus gros et sans label sur petit écran */
   .marker-label { display: none; }
   .dot { width: 18px; height: 18px; }
 
-  .tab { padding: 12px 4px; font-size: 0.8rem; min-height: 44px; }
+  /* onglets du bas : compacts pour ne pas dépasser la largeur d'écran */
+  #sidebar-tabs { flex-wrap: nowrap; overflow: hidden; }
+  .tab {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 12px 2px;
+    font-size: 0.72rem;
+    min-height: 44px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .panel { padding: 8px; }
   #filter-text, .search-bar input { min-height: 42px; }
   #point-list li { padding: 10px; }
