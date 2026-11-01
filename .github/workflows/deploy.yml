@@ -39,11 +39,11 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # Variables publiques embarquées dans le bundle (définies dans
-          # Settings > Secrets and variables > Actions > Variables du dépôt)
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
-          VITE_IGN_API_KEY: ${{ vars.VITE_IGN_API_KEY }}
+          # Variables publiques embarquées dans le bundle. Fallback sur secrets.* :
+          # si la valeur est dans Secrets (et pas Variables), vars.* est vide.
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY || secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_IGN_API_KEY: ${{ vars.VITE_IGN_API_KEY || secrets.VITE_IGN_API_KEY }}
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
