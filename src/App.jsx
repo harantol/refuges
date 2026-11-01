@@ -384,11 +384,11 @@ export default function App() {
         } catch {
           /* stockage indisponible */
         }
-        // synchro cloud si connecté
+        // synchro cloud si connecté (erreur rendue visible dans le statut)
         if (userRef.current) {
           const u = userRef.current;
-          if (willFav) favorisCloud.add(u.id, id).catch(() => {});
-          else favorisCloud.remove(u.id, id).catch(() => {});
+          const op = willFav ? favorisCloud.add(u.id, id) : favorisCloud.remove(u.id, id);
+          op.catch((e) => setStatus(`Erreur synchro cloud : ${e.message}`));
         }
         return next;
       });
@@ -402,7 +402,13 @@ export default function App() {
     const local = loadFavorites();
     const merged = new Set([...local, ...ids]);
     const missing = [...local].filter((id) => !ids.includes(id));
-    await Promise.all(missing.map((id) => favorisCloud.add(u.id, id).catch(() => {})));
+    await Promise.all(
+      missing.map((id) =>
+        favorisCloud.add(u.id, id).catch((e) => {
+          throw new Error(`ajout favori ${id}: ${e.message}`);
+        })
+      )
+    );
     setFavorites(merged);
     try {
       localStorage.setItem(FAVORIS_KEY, JSON.stringify([...merged]));
