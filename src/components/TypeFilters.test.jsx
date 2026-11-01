@@ -45,3 +45,24 @@ describe("TypeFilters", () => {
     expect(onToggle).toHaveBeenCalledWith(10, false);
   });
 });
+
+describe("TypeFilters - icônes", () => {
+  it("chaque type a son icône refuges.info à côté de l'intitulé", () => {
+    const allTypes = new Map([
+      [7, "cabane non gardée"],
+      [10, "refuge gardé"],
+      [23, "point d'eau"],
+    ]);
+    const { container } = render(
+      <TypeFilters allTypes={allTypes} uncheckedTypes={new Set()} onToggle={() => {}} />
+    );
+    const imgs = container.querySelectorAll("#type-filters .type-icon");
+    expect(imgs.length).toBe(3);
+    expect(imgs[0].getAttribute("src")).toBe("https://www.refuges.info/images/icones/cabane.png");
+    expect(imgs[1].getAttribute("src")).toBe("https://www.refuges.info/images/icones/cabane_red.png");
+    expect(imgs[2].getAttribute("src")).toBe("https://www.refuges.info/images/icones/pointdeau.png");
+    // l'icône est dans le label, avant le texte
+    const label = container.querySelector("#type-filters label");
+    expect(label.children[1].className).toBe("type-icon");
+  });
+});

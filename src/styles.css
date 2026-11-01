@@ -176,6 +176,7 @@ html, body, #root {
 }
 #type-filters label:hover { background: var(--gm-border); }
 #type-filters input { accent-color: var(--gm-blue); }
+#type-filters .type-icon { width: 17px; height: 17px; flex: none; }
 #type-filters .type-count {
   background: var(--gm-blue-soft);
   color: var(--gm-blue);
@@ -185,18 +186,6 @@ html, body, #root {
   font-weight: 500;
 }
 
-/* légende des icônes, en petit dans l'entête */
-#type-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
-  flex-basis: 100%;
-  font-size: 0.72rem;
-  color: var(--gm-text-2);
-  padding-top: 4px;
-}
-#type-legend .legend-item { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-#type-legend .legend-item img { width: 16px; height: 16px; }
 
 /* ---------- Carte + contrôles flottants ---------- */
 main { flex: 1; display: flex; min-height: 0; }
@@ -558,8 +547,9 @@ main { flex: 1; display: flex; min-height: 0; }
   #topbar { padding: 6px 12px; gap: 8px; }
   #topbar h1 { font-size: 0.95rem; white-space: nowrap; }
   .controls { gap: 6px; flex: 1; }
-  .controls > button, .controls > select, #topbar #type-filters-wrap, #topbar #type-legend { display: none; }
-  .massif-row { min-width: 0; flex-wrap: nowrap; }
+  .controls > button, .controls > select, #topbar #type-filters-wrap { display: none; }
+  /* champ à largeur fixe sur écran étroit : laisse la place au bouton 👤 (absolute, à droite) */
+  .massif-row { min-width: 0; flex: 0 1 auto; max-width: calc(100% - 64px); flex-wrap: nowrap; }
   .massif-row #massif-search { min-height: 38px; font-size: 0.85rem; }
   #status { font-size: 0.75rem; width: 100%; }
   .account-wrap { top: 6px; right: 8px; }

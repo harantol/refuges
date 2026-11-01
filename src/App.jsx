@@ -568,8 +568,6 @@ export default function App() {
         onLogin={handleLogin}
         onSignup={handleSignup}
         onLogout={handleLogout}
-        recentDays={recentDays}
-        onRecentChange={setRecentDays}
         status={status}
       />
       <main>
