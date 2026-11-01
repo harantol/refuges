@@ -286,6 +286,7 @@ export default function App() {
   const selectPoint = useCallback((id) => {
     setSelectedId(id);
     setTab("fiche");
+    setPanelOpen(true); // sur mobile, déplier le panneau pour voir la fiche
     setFiche(null);
     setFicheLoading(true);
     try {
