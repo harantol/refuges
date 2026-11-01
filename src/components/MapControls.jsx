@@ -1,6 +1,7 @@
 import TypeFilters from "./TypeFilters";
 import IgnKeyForm from "./IgnKeyForm";
 import { BASEMAPS } from "../basemaps";
+import { IconLayers, IconSearch, IconLocate, IconFilter } from "./icons";
 
 // Boutons flottants sur la carte (visibles uniquement sur mobile, cf. CSS) :
 // style "Google Maps" — la barre d'outils n'encombre plus l'entête.
@@ -31,7 +32,7 @@ export default function MapControls({
         aria-label="Fond de carte"
         onClick={() => onMenuToggle("basemap")}
       >
-        🗺️
+        <IconLayers />
       </button>
       <button
         className={zoneOnly ? "active" : ""}
@@ -40,7 +41,7 @@ export default function MapControls({
         aria-pressed={zoneOnly}
         onClick={onZoneOnlyToggle}
       >
-        🔍
+        <IconSearch />
       </button>
       <button
         className={located ? "active" : ""}
@@ -48,7 +49,7 @@ export default function MapControls({
         aria-label="Autour de moi"
         onClick={onLocate}
       >
-        🎯
+        <IconLocate />
       </button>
       <button
         className={menu === "filters" ? "active" : ""}
@@ -56,10 +57,7 @@ export default function MapControls({
         aria-label="Filtres"
         onClick={() => onMenuToggle("filters")}
       >
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
-             strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M3 5h18l-7 8v5.5l-4 2V13L3 5z" />
-        </svg>
+        <IconFilter />
       </button>
 
 

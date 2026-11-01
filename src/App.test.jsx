@@ -245,6 +245,15 @@ describe("App (intégration, fetch mocké)", () => {
     expect(container.querySelector(".map-menu")).toBeNull();
   });
 
+  it("un clic sur la carte replie aussi le panneau du bas (classe open retirée)", async () => {
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    fireEvent.click(document.getElementById("tab-recherche")); // déplie le panneau
+    expect(document.getElementById("sidebar").className).toContain("open");
+    fireEvent.click(screen.getByTestId("map-click")); // clic ailleurs (carte)
+    expect(document.getElementById("sidebar").className).not.toContain("open");
+  });
+
   it("au clic sur un point, charge et affiche sa fiche", async () => {
     render(<App />);
     fireEvent.click(await screen.findByText("Refuge Test"));

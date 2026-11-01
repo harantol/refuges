@@ -24,6 +24,11 @@ html, body, #root {
 
 .controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
+/* champ recherche de massif + icône compte 👤 à sa droite (même ligne, nowrap) */
+.massif-row { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 180px; position: relative; flex-wrap: nowrap; }
+.massif-row #massif-search { flex: 1 1 auto; width: 100%; min-width: 0; }
+.massif-row .account-wrap { position: relative; flex: none; }
+
 .controls select, .controls button, #filter-text {
   padding: 6px 10px;
   border: none;
@@ -584,7 +589,8 @@ main { flex: 1; display: flex; min-height: 0; }
      Les autres contrôles (fonds, zone, position, filtres, pentes) passent
      en boutons flottants sur la carte (#map-controls). */
   #topbar { padding: 6px 8px; gap: 6px; }
-  #topbar h1 { font-size: 0.9rem; }
+  #topbar h1 { font-size: 0.85rem; white-space: nowrap; }
+  .massif-row { min-width: 0; flex-wrap: nowrap; }
   .controls { gap: 6px; flex: 1; }
   .controls > button,
   .controls > select,

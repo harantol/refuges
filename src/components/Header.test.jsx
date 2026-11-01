@@ -66,6 +66,8 @@ describe("Header", () => {
     // au clic sur 👤, onAccountToggle est appelé
     fireEvent.click(screen.getByLabelText("Compte"));
     expect(props.onAccountToggle).toHaveBeenCalled();
+    // l'icône est un SVG outline (pas l'emoji plein)
+    expect(screen.getByLabelText("Compte").querySelector("svg")).not.toBeNull();
   });
 
   it("affiche la légende des icônes de types dans l'entête (7 icônes refuges.info)", () => {
