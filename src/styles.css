@@ -134,7 +134,7 @@ html, body, #root {
   font-size: 0.85rem;
 }
 .auth-user { margin: 0 0 4px; font-size: 0.85rem; word-break: break-all; }
-.auth-actions { display: flex; gap: 6px; }
+.auth-actions { display: flex; flex-direction: column; gap: 6px; } /* boutons pleine largeur, bien visibles */
 .auth-btn {
   flex: 1;
   padding: 8px;
@@ -162,8 +162,53 @@ main { flex: 1; display: flex; min-height: 0; }
 
 #map { flex: 1; }
 
-/* contrôles flottants sur la carte : cachés sur desktop, visibles sur mobile */
-#map-controls { display: none; }
+/* contrôles flottants sur la carte, style Google Maps — visibles desktop ET mobile */
+#map-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+}
+#map-controls > button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  font-size: 1.15rem;
+  cursor: pointer;
+  line-height: 1;
+}
+#map-controls > button.active { background: #1f4e3d; }
+.map-menu {
+  position: absolute;
+  top: 0;
+  right: 52px;
+  width: 230px;
+  max-height: 62vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  padding: 10px 12px;
+  color: #222;
+}
+.map-menu-title { margin: 0 0 6px; font-size: 0.8rem; font-weight: 700; color: #1f4e3d; }
+.map-menu label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 2px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.map-menu select { margin-left: auto; min-height: 34px; font-size: 0.8rem; }
+.map-menu .ign-key-form { flex-direction: column; align-items: stretch; gap: 4px; padding: 6px 0; }
+.map-menu .ign-key-form input { min-width: 0; width: 100%; }
 
 #sidebar {
   width: 340px;
@@ -280,19 +325,28 @@ main { flex: 1; display: flex; min-height: 0; }
   box-shadow: 0 0 3px #0008;
 }
 
-/* icônes refuges.info : conteneur en colonne = icône puis label en-dessous (pas de superposition) */
+/* icônes refuges.info : conteneur FIXE 30x30 (taille de l'icône) ancré au centre du point GPS ;
+   le label est en absolu, centré sous l'icône, et peut dépasser sans élargir le conteneur */
 .marker-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  position: relative;
+  width: 30px;
+  height: 30px;
+  display: block;
   background: none;
   border: none;
 }
 .marker-icon {
+  position: absolute;
+  inset: 0;
   width: 30px;
   height: 30px;
-  display: block;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+}
+.marker-wrap .dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 .li-icon { width: 20px; height: 20px; flex: none; }
 .fiche-icon { width: 36px; height: 36px; vertical-align: -10px; margin-right: 8px; }
@@ -308,7 +362,10 @@ main { flex: 1; display: flex; min-height: 0; }
 }
 
 .marker-label {
-  display: inline-block;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
   margin-top: 1px;
   padding: 0 6px;
   border-radius: 999px;
@@ -541,53 +598,6 @@ main { flex: 1; display: flex; min-height: 0; }
   main { flex-direction: column; position: relative; }
   #map-area { flex: 1; }
 
-  /* boutons flottants style Google Maps, en haut à droite de la carte */
-  #map-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 1000;
-  }
-  #map-controls > button {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: #fff;
-    border: none;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    font-size: 1.15rem;
-    cursor: pointer;
-    line-height: 1;
-  }
-  #map-controls > button.active { background: #1f4e3d; }
-  .map-menu {
-    position: absolute;
-    top: 0;
-    right: 52px;
-    width: 230px;
-    max-height: 62vh;
-    overflow-y: auto;
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-    padding: 10px 12px;
-    color: #222;
-  }
-  .map-menu-title { margin: 0 0 6px; font-size: 0.8rem; font-weight: 700; color: #1f4e3d; }
-  .map-menu label {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 5px 2px;
-    font-size: 0.85rem;
-    cursor: pointer;
-  }
-  .map-menu select { margin-left: auto; min-height: 34px; font-size: 0.8rem; }
-  .map-menu .ign-key-form { flex-direction: column; align-items: stretch; gap: 4px; padding: 6px 0; }
-  .map-menu .ign-key-form input { min-width: 0; width: 100%; }
   #map-controls #type-filters-wrap { display: block; }
   #map-controls #type-filters-wrap summary { background: #eef5f0; color: #1f4e3d; }
 

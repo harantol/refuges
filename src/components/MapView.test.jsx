@@ -10,8 +10,10 @@ describe("makeIcon (marqueur carte)", () => {
     expect(opt.html).toContain("https://www.refuges.info/images/icones/cabane_feu.png");
     expect(opt.html).toContain("marker-label");
     expect(opt.html).toContain("Cabane X");
-    // l'icône vient avant le label dans le HTML (flex column : icône puis texte)
-    expect(opt.html.indexOf("marker-icon")).toBeLessThan(opt.html.indexOf("marker-label"));
+    // conteneur fixe 30x30 ancré au centre -> le point GPS est au centre de l'icône,
+    // même si le label est plus large (il est en absolu, il ne élargit pas le conteneur)
+    expect(opt.iconSize).toEqual([30, 30]);
+    expect(opt.iconAnchor).toEqual([15, 15]);
   });
 
   it("fallback pastille colorée si pas d'icône de type", () => {

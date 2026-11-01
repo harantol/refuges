@@ -199,25 +199,24 @@ describe("App (intégration, fetch mocké)", () => {
     expect(screen.getByTestId("map").getAttribute("data-basemap")).toBe("topo");
   });
 
-  it("choisir IGN Top 25 affiche le formulaire de clé perso (clé partagée par défaut)", async () => {
+  it("choisir IGN Top 25 dans le menu 🗺️ affiche le formulaire de clé perso", async () => {
     render(<App />);
     await screen.findByText("Refuge Test");
-    // le select de fond du header (id basemap-select)
-    fireEvent.change(document.getElementById("basemap-select"), { target: { value: "ign" } });
+    fireEvent.click(screen.getByLabelText("Fond de carte")); // menu flottant
+    fireEvent.click(screen.getByLabelText(/IGN Top 25/)); // radio
+    expect(screen.getByTestId("map").getAttribute("data-basemap")).toBe("ign");
     expect(await screen.findByPlaceholderText(/Clé perso IGN/)).toBeInTheDocument();
   });
 
-  it("la case Pentes active/désactive la couche hillshade sur la carte", async () => {
+  it("la case Pentes (menu 🗺️ de la carte) active/désactive la couche hillshade", async () => {
     render(<App />);
     await screen.findByText("Refuge Test");
     const map = screen.getByTestId("map");
     expect(map.getAttribute("data-hillshade")).toBe("false");
-    // la case Pentes existe dans le header (desktop) et dans le menu flottant (mobile)
-    const cases = screen.getAllByLabelText(/Pentes/);
-    fireEvent.click(cases[cases.length - 1]);
+    fireEvent.click(screen.getByLabelText("Fond de carte")); // ouvre le menu 🗺️
+    const casePentes = screen.getByLabelText(/Pentes/); // unique maintenant (menu carte)
+    fireEvent.click(casePentes);
     expect(map.getAttribute("data-hillshade")).toBe("true");
-    fireEvent.click(screen.getAllByLabelText(/Pentes/)[0]);
-    expect(map.getAttribute("data-hillshade")).toBe("false");
   });
 
   it("les contrôles flottants de la carte sont présents (fonds, interrupteur zone, position, filtres)", async () => {

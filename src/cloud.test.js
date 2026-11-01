@@ -88,6 +88,13 @@ describe("cloud (Supabase REST)", () => {
     expect(getToken()).toBeNull();
   });
 
+  it("normalise l'URL (slash final retiré, pas de double slash dans le path)", async () => {
+    vi.stubEnv("VITE_SUPABASE_URL", "https://test.supabase.co/");
+    await auth.login("a@b.c", "secret");
+    expect(fetch.mock.calls[0][0]).toBe("https://test.supabase.co/auth/v1/token?grant_type=password");
+    expect(fetch.mock.calls[0][0]).not.toContain("//auth");
+  });
+
   it("propage le message d'erreur du serveur", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 400, json: async () => ({ message: "Invalid login credentials" }) })));
     await expect(auth.login("a@b.c", "x")).rejects.toThrow("Invalid login credentials");

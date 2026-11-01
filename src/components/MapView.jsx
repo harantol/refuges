@@ -18,8 +18,8 @@ export function makeIcon(feature) {
   return L.divIcon({
     className: "marker-wrap",
     html: `${picto}<span class="marker-label" style="border-color:${color};color:${color}">${nom}</span>`,
-    iconSize: null,
-    iconAnchor: icon ? [14, 14] : [8, 8], // ancré au centre de l'icône
+    iconSize: [30, 30], // conteneur fixe = taille de l'icône, le label dépasse en dessous
+    iconAnchor: [15, 15], // ancré pile au centre du point GPS
   });
 }
 

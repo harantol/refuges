@@ -48,6 +48,14 @@ describe("AuthPanel", () => {
     expect(onLogout).toHaveBeenCalled();
   });
 
+  it("affiche les deux boutons 'Connexion' ET 'Créer un compte' bien visibles", () => {
+    vi.stubEnv("VITE_SUPABASE_URL", "https://test.supabase.co");
+    vi.stubEnv("VITE_SUPABASE_ANON_KEY", "k");
+    render(<AuthPanel user={null} busy={false} error="" onLogin={() => {}} onSignup={() => {}} onLogout={() => {}} />);
+    expect(screen.getByText("Connexion")).toBeVisible();
+    expect(screen.getByText("Créer un compte")).toBeVisible();
+  });
+
   it("affiche l'erreur renvoyée", () => {
     vi.stubEnv("VITE_SUPABASE_URL", "https://test.supabase.co");
     vi.stubEnv("VITE_SUPABASE_ANON_KEY", "k");

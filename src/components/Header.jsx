@@ -1,8 +1,6 @@
 import TypeFilters from "./TypeFilters";
 import TypeLegend from "./TypeLegend";
-import IgnKeyForm from "./IgnKeyForm";
 import AuthPanel from "./AuthPanel";
-import { BASEMAPS } from "../basemaps";
 
 export default function Header({
   massifs,
@@ -10,10 +8,6 @@ export default function Header({
   onMassifQueryChange,
   onZoneClick,
   zoneActive,
-  basemap,
-  onBasemapChange,
-  hillshade,
-  onHillshadeChange,
   onLocate,
   located,
   recentDays,
@@ -23,7 +17,6 @@ export default function Header({
   typeCounts,
   uncheckedTypes,
   onToggleType,
-  onIgnKeySave,
   user,
   accountOpen,
   onAccountToggle,
@@ -79,28 +72,7 @@ export default function Header({
         <button id="btn-zone" className={zoneActive ? "active" : ""} onClick={onZoneClick} title="Revenir à la zone visible sur la carte">
           Zone visible
         </button>
-        <select
-          id="basemap-select"
-          value={basemap}
-          onChange={(e) => onBasemapChange(e.target.value)}
-          title="Fond de carte"
-        >
-          {Object.entries(BASEMAPS).map(([key, b]) => (
-            <option key={key} value={key}>{b.label}</option>
-          ))}
-        </select>
-        <label
-          id="hillshade-toggle"
-          title="Afficher les pentes IGN montagne (couche officielle, sans clé) par-dessus la carte"
-        >
-          <input
-            type="checkbox"
-            checked={hillshade}
-            onChange={(e) => onHillshadeChange(e.target.checked)}
-          />
-          Pentes
-        </label>
-        {basemap === "ign" && <IgnKeyForm onIgnKeySave={onIgnKeySave} />}
+        {/* fond de carte + pentes + clé IGN : dans le menu flottant 🗺️ sur la carte (MapControls) */}
         <button
           id="btn-locate"
           className={located ? "active" : ""}
