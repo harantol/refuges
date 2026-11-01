@@ -22,12 +22,13 @@ html, body, #root {
 
 #topbar h1 { font-size: 1.1rem; margin: 0; white-space: nowrap; }
 
-.controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1; } /* toute la largeur -> 👤 aligné à droite via margin-left:auto du .massif-row */
 
 /* champ recherche de massif + icône compte 👤 à sa droite (même ligne, nowrap) */
 .massif-row { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 180px; position: relative; flex-wrap: nowrap; }
+#topbar { position: relative; }
+.account-wrap { position: absolute; top: 8px; right: 12px; margin-left: 0; z-index: 1002; } /* 👤 toujours aligné à droite de la page */
 .massif-row #massif-search { flex: 1 1 auto; width: 100%; min-width: 0; }
-.massif-row .account-wrap { position: relative; flex: none; }
 
 .controls select, .controls button, #filter-text {
   padding: 6px 10px;
@@ -115,7 +116,8 @@ html, body, #root {
 .ign-key-form button:disabled { opacity: 0.5; cursor: default; }
 
 /* compte utilisateur (header desktop + menu mobile) */
-.account-wrap { position: relative; }
+/* clic hors du panneau compte -> le fermer (déconnexion accessible) */
+.backdrop { position: fixed; inset: 0; z-index: 1000; background: transparent; }
 #btn-account { font-size: 1.05rem; }
 .account-dropdown {
   position: absolute;

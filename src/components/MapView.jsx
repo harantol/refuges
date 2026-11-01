@@ -55,6 +55,21 @@ const userIcon = L.divIcon({
   iconAnchor: [9, 9],
 });
 
+// Centre la carte sur l'emprise des features quand fitToFeatures est activé (ex: recherche par massif)
+function BoundsController({ features, fitToFeatures }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!fitToFeatures || features.length === 0) return;
+    try {
+      const bounds = L.latLngBounds(features.map((f) => [f.geometry.coordinates[1], f.geometry.coordinates[0]]));
+      if (bounds.isValid()) map.fitBounds(bounds, { padding: [30, 30] });
+    } catch {
+      /* coordonnées invalides */
+    }
+  }, [features, fitToFeatures, map]);
+  return null;
+}
+
 function FocusController({ focus, userPos }) {
   const map = useMap();
   useEffect(() => {
@@ -70,7 +85,7 @@ function FocusController({ focus, userPos }) {
   return null;
 }
 
-export default function MapView({ features, onSelect, onNavigate, onCloseMenus, focus, basemap, userPos, hillshade }) {
+export default function MapView({ features, onSelect, onNavigate, onCloseMenus, focus, basemap, userPos, hillshade, fitToFeatures }) {
   const base = BASEMAPS[basemap] || BASEMAPS.topo;
   const markers = useMemo(
     () =>
@@ -83,7 +98,7 @@ export default function MapView({ features, onSelect, onNavigate, onCloseMenus, 
   );
 
   return (
-    <MapContainer center={[45.7, 6.4]} zoom={9} id="map" zoomControl={false}>
+    <MapContainer center={[45.7, 6.4]} zoom={9} id="map" zoomControl={false} ref={(m) => { if (m) window.__map = m; }}>
       <TileLayer
         key={basemap}
         url={base.url}
@@ -101,6 +116,7 @@ export default function MapView({ features, onSelect, onNavigate, onCloseMenus, 
         />
       )}
       <MapEvents onNavigate={onNavigate} onCloseMenus={onCloseMenus} />
+      <BoundsController features={features} fitToFeatures={fitToFeatures} />
       <FocusController focus={focus} userPos={userPos} />
       <MarkerClusterGroup showCoverageOnHover={false} disableClusteringAtZoom={14}>
         {markers.map((m) => (

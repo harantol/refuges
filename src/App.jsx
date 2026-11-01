@@ -553,6 +553,7 @@ export default function App() {
 
   return (
     <>
+      {accountOpen && <div className="backdrop" onClick={() => setAccountOpen(false)} />}
       <Header
         massifs={massifs}
         massifQuery={massifQuery}
@@ -567,19 +568,13 @@ export default function App() {
         onLogin={handleLogin}
         onSignup={handleSignup}
         onLogout={handleLogout}
-        onLocate={locate}
-        located={userPos != null}
         recentDays={recentDays}
         onRecentChange={setRecentDays}
         status={status}
-        allTypes={allTypes}
-        typeCounts={typeCounts}
-        uncheckedTypes={uncheckedTypes}
-        onToggleType={toggleType}
       />
       <main>
         <div id="map-area">
-          <MapView features={displayedFeatures} onSelect={selectPoint} onNavigate={onNavigate} onCloseMenus={() => { setMapMenu(null); setPanelOpen(false); }} focus={focus} basemap={basemap} userPos={userPos} hillshade={hillshade} />
+          <MapView features={displayedFeatures} onSelect={selectPoint} onNavigate={onNavigate} onCloseMenus={() => { setMapMenu(null); setPanelOpen(false); }} focus={focus} basemap={basemap} userPos={userPos} hillshade={hillshade} fitToFeatures={mode.type === "massif"} />
           <MapControls
             basemap={basemap}
             onBasemapChange={changeBasemap}
