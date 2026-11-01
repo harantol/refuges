@@ -7,7 +7,7 @@ import { TYPE_LABELS } from "./types";
 vi.mock("./components/MapView", async () => {
   const React = await import("react");
   return {
-    default: ({ onNavigate, basemap, hillshade, onCloseMenus }) => {
+    default: ({ onNavigate, basemap, hillshade, onCloseMenus, fitToFeatures }) => {
       React.useEffect(() => {
         onNavigate("6.0,45.5,7.0,46.0");
       }, [onNavigate]);
@@ -17,6 +17,7 @@ vi.mock("./components/MapView", async () => {
           "data-testid": "map",
           "data-basemap": basemap,
           "data-hillshade": String(Boolean(hillshade)),
+          "data-fit": String(Boolean(fitToFeatures)),
         },
         React.createElement(
           "button",
@@ -283,12 +284,14 @@ describe("App (intégration, fetch mocké)", () => {
     });
   });
 
-  it("charge un massif quand on tape son nom exact dans l'autocomplétion", async () => {
+  it("charge un massif quand on tape son nom exact, et la carte se centre dessus (fitToFeatures)", async () => {
     render(<App />);
     await screen.findByText("Refuge Test");
+    expect(screen.getByTestId("map").getAttribute("data-fit")).toBe("false");
     fireEvent.change(screen.getByPlaceholderText(/massif/i), { target: { value: "Vanoise" } });
     expect(await screen.findByText("Refuge Massif")).toBeInTheDocument();
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/massif?massif=351"));
+    expect(screen.getByTestId("map").getAttribute("data-fit")).toBe("true"); // BoundsController -> fitBounds
   });
 
   it("recherche détaillée par nom dans toute la base (bbox=world, nb_points=all)", async () => {
@@ -342,6 +345,7 @@ describe("App (intégration, fetch mocké)", () => {
   it("affiche tous les types connus dans les filtres, même absents de la zone courante", async () => {
     render(<App />);
     await screen.findByText("Refuge Test"); // zoneData ne contient qu'un refuge gardé (type 10)
+    fireEvent.click(screen.getByLabelText("Filtres")); // ouvre le menu entonnoir
     const filters = within(document.getElementById("type-filters"));
     expect(filters.getAllByRole("checkbox").length).toBe(Object.keys(TYPE_LABELS).length);
     expect(filters.getByLabelText(/cabane non gardée/)).toBeChecked();
@@ -350,6 +354,7 @@ describe("App (intégration, fetch mocké)", () => {
   it("conserve tous les filtres de type (et leur état) après un rechargement", async () => {
     render(<App />);
     await screen.findByText("Refuge Test");
+    fireEvent.click(screen.getByLabelText("Filtres")); // ouvre le menu entonnoir
     const filters = within(document.getElementById("type-filters"));
     // décocher un type absent de la zone courante
     fireEvent.click(filters.getByLabelText(/cabane non gardée/));
@@ -359,6 +364,7 @@ describe("App (intégration, fetch mocké)", () => {
     await waitFor(() =>
       expect(fetch).toHaveBeenCalledWith(expect.stringContaining("depuis=-2592000"))
     );
+    // le menu Filtres est toujours ouvert : après rechargement, toujours 7 cases
     await waitFor(() =>
       expect(within(document.getElementById("type-filters")).getAllByRole("checkbox").length).toBe(
         Object.keys(TYPE_LABELS).length

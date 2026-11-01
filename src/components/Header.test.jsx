@@ -8,15 +8,9 @@ const makeProps = (overrides = {}) => ({
   onMassifQueryChange: vi.fn(),
   onZoneClick: vi.fn(),
   zoneActive: true,
-  onLocate: vi.fn(),
-  located: false,
   recentDays: 0,
   onRecentChange: vi.fn(),
   status: "Prêt",
-  allTypes: new Map([[10, "refuge gardé"]]),
-  typeCounts: new Map([[10, 2]]),
-  uncheckedTypes: new Set(),
-  onToggleType: vi.fn(),
   ...overrides,
 });
 
@@ -25,7 +19,6 @@ describe("Header", () => {
     render(<Header {...makeProps()} />);
     expect(screen.getByPlaceholderText(/massif/i)).toBeInTheDocument();
     expect(screen.getByText("Zone visible")).toBeInTheDocument();
-    expect(screen.getByText(/Autour de moi/)).toBeInTheDocument();
     expect(screen.getByTitle(/modifiés récemment/i)).toBeInTheDocument();
     expect(screen.getByText("Prêt")).toBeInTheDocument();
     expect(document.querySelector('#massifs-list option[value="Vanoise"]')).not.toBeNull(); // datalist
@@ -38,8 +31,6 @@ describe("Header", () => {
     expect(props.onMassifQueryChange).toHaveBeenCalledWith("Van");
     fireEvent.click(screen.getByText("Zone visible"));
     expect(props.onZoneClick).toHaveBeenCalled();
-    fireEvent.click(screen.getByText(/Autour de moi/));
-    expect(props.onLocate).toHaveBeenCalled();
     fireEvent.change(screen.getByTitle(/modifiés récemment/i), { target: { value: "30" } });
     expect(props.onRecentChange).toHaveBeenCalledWith(30);
   });
@@ -49,18 +40,15 @@ describe("Header", () => {
     expect(screen.getByText("Zone visible")).toHaveClass("active");
   });
 
-  it("le bouton locate a la classe active quand located", () => {
-    render(<Header {...makeProps({ located: true })} />);
-    expect(screen.getByText(/Autour de moi/)).toHaveClass("active");
-  });
-
-  it("l'icône compte 👤 est à droite du champ de recherche de massif", () => {
+  it("l'icône compte 👤 est après le champ de recherche, à droite de la page", () => {
     const props = makeProps({ accountOpen: true, onAccountToggle: vi.fn() });
     const { container } = render(<Header {...props} />);
-    const row = container.querySelector(".massif-row");
-    expect(row).not.toBeNull();
-    expect(row.children[0].id).toBe("massif-search"); // le champ
-    expect(row.children[1].querySelector("#btn-account")).not.toBeNull(); // l'icône à droite
+    // le champ est dans .massif-row, le bouton 👤 est le dernier élément de .controls (poussé à droite)
+    expect(container.querySelector(".massif-row #massif-search")).not.toBeNull();
+    const controls = container.querySelector(".controls");
+    const btn = controls.querySelector("#btn-account");
+    expect(btn).not.toBeNull();
+    expect(controls.lastElementChild.classList.contains("account-wrap")).toBe(true);
     // le panneau compte s'ouvre (accountOpen=true)
     expect(container.querySelector(".account-dropdown")).not.toBeNull();
     // au clic sur 👤, onAccountToggle est appelé
@@ -80,10 +68,4 @@ describe("Header", () => {
     expect(legend.textContent).toContain("refuge gardé");
   });
 
-  it("affiche les filtres de type avec compteur", () => {
-    const { container } = render(<Header {...makeProps()} />);
-    const filters = container.querySelector("#type-filters");
-    expect(filters.textContent).toContain("refuge gardé");
-    expect(filters.textContent).toContain("2");
-  });
 });
