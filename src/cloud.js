@@ -55,17 +55,21 @@ async function req(path, { method = "GET", body, auth = false } = {}) {
     headers,
     body: body ? JSON.stringify(body) : undefined,
   });
+  // Lire le texte d'abord : Supabase renvoie 201/204 avec un body VIDE sur les
+  // écritures sans "Prefer: return=representation" -> res.json() planterait
+  // ("unexpected end of data")
+  const text = await res.text();
   if (!res.ok) {
     let msg = "HTTP " + res.status;
     try {
-      const j = await res.json();
+      const j = JSON.parse(text);
       msg = j.message || j.error_description || j.msg || msg;
     } catch {
       /* body non JSON */
     }
     throw new Error(msg);
   }
-  return res.status === 204 ? null : res.json();
+  return text ? JSON.parse(text) : null;
 }
 
 export const auth = {

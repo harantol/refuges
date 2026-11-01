@@ -95,6 +95,15 @@ describe("cloud (Supabase REST)", () => {
     expect(fetch.mock.calls[0][0]).not.toContain("//auth");
   });
 
+  it("gère un body vide (201/204) sans planter sur res.json()", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: true, status: 201, text: async () => "" }))
+    );
+    localStorage.setItem("cloud-auth-token", "tok");
+    await expect(favorisCloud.add("u1", 22)).resolves.toBeNull();
+  });
+
   it("propage le message d'erreur du serveur", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 400, json: async () => ({ message: "Invalid login credentials" }) })));
     await expect(auth.login("a@b.c", "x")).rejects.toThrow("Invalid login credentials");
