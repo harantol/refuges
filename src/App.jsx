@@ -26,7 +26,7 @@ export default function App() {
   const [total, setTotal] = useState(0);
   const [status, setStatus] = useState("Chargement…");
   // chargement en cours -> spinner sur la carte (jamais de texte dans l'entête, ça le fait grandir)
-  const loading = /chargement|en cours|recherche dans/i.test(status);
+  const loading = /^(?:chargement\b|recherche dans\b|localisation en cours\b)/i.test(status);
 
   // les messages info/erreur (toast sur la carte) s'effacent tout seuls au bout de 5 s
   useEffect(() => {
