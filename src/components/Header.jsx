@@ -5,8 +5,6 @@ export default function Header({
   massifs,
   massifQuery,
   onMassifQueryChange,
-  onZoneClick,
-  zoneActive,
   user,
   accountOpen,
   onAccountToggle,
@@ -35,9 +33,6 @@ export default function Header({
             <option key={m.id} value={m.nom} />
           ))}
         </datalist>
-        <button id="btn-zone" className={zoneActive ? "active" : ""} onClick={onZoneClick} title="Revenir à la zone visible sur la carte">
-          Zone visible
-        </button>
         {/* fond de carte + pentes + clé IGN : dans le menu flottant 🗺️ sur la carte (MapControls).
             Plus de texte de statut ici : en mobile il faisait passer l'entête sur 2 lignes
             et décalait la carte — le chargement est indiqué par un spinner sur la carte (MapStatus). */}

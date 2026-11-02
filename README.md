@@ -66,8 +66,16 @@ grant select, insert, update, delete on public.favoris to authenticated;
 ## Tests & CI
 
 - `npm test` : **171 tests** (Vitest + jsdom + Testing Library) — unitaires (api, geo, utils, types), composants (Header, Sidebar, PointList, Fiche, SearchPanel, TypeFilters, SafeHtml, Lightbox) et intégration App (fetch mocké)
-- CI GitHub Actions (`.github/workflows/ci.yml`) : `npm ci` → `npm test` → `npm run build` → artifact `dist/`
+- CI GitHub Actions (`.github/workflows/ci.yml`) : `npm ci` → `npm test` → `npm run build` → artifact `dist/`, sur les PR vers `develop` et `main`
 - Déploiement auto sur GitHub Pages (`.github/workflows/deploy.yml`) à chaque push sur `main` → https://harantol.github.io/refuges/
+
+## Branches & versions
+
+- `develop` est la branche par défaut : les nouvelles PR doivent la cibler.
+- `main` reçoit les changements destinés à une version publiée ; le déploiement GitHub Pages reste limité à cette branche.
+- Les PR et commits fusionnés vers `main` doivent suivre [Conventional Commits](https://www.conventionalcommits.org/) : `fix:` incrémente le patch, `feat:` la version mineure, et une rupture de compatibilité (`!` ou `BREAKING CHANGE:`) la version majeure. Les changements sans impact utilisateur peuvent utiliser `chore:`.
+- Après des changements conventionnels sur `main`, Release Please ouvre ou met à jour une PR de version ciblant `main`. Elle synchronise `package.json`, `package-lock.json` et le changelog ; fusionner cette PR publie le tag et la release GitHub.
+- Les changements fusionnés uniquement dans `develop` ne déclenchent pas de versionnement. Le point de départ est la version actuelle `1.0.0` ; l'historique antérieur à la configuration n'est pas réinterprété.
 
 ## Lancer en local
 

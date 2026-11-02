@@ -26,10 +26,10 @@ const makeProps = (overrides = {}) => ({
 });
 
 describe("MapControls (boutons flottants mobile)", () => {
-  it("affiche les boutons : fonds, interrupteur zone (loupe), ma position, filtres (entonnoir SVG)", () => {
+  it("affiche les boutons carte et le texte du commutateur de zone", () => {
     render(<MapControls {...makeProps()} />);
     expect(screen.getByLabelText("Fond de carte")).toBeInTheDocument();
-    expect(screen.getByLabelText("Limiter à la zone visible")).toBeInTheDocument();
+    expect(screen.getByLabelText("Limiter la recherche à la zone visible")).toBeInTheDocument();
     expect(screen.getByLabelText("Autour de moi")).toBeInTheDocument();
     const filtres = screen.getByLabelText("Filtres");
     expect(filtres.querySelector("svg")).not.toBeNull(); // icône entonnoir SVG, pas un emoji
@@ -38,19 +38,20 @@ describe("MapControls (boutons flottants mobile)", () => {
   it("tous les boutons ont une icône SVG outline (style Google Maps), pas d'emoji", () => {
     const { container } = render(<MapControls {...makeProps()} />);
     const boutons = container.querySelectorAll("#map-controls > button");
-    expect(boutons.length).toBe(4);
+    expect(boutons.length).toBe(3);
     boutons.forEach((b) => {
       expect(b.querySelector("svg")).not.toBeNull();
       expect(b.textContent.trim()).toBe(""); // plus d'emoji texte
     });
+    expect(container.querySelector("#zone-only-control .zone-only-switch")).not.toBeNull();
   });
 
-  it("la loupe est un interrupteur (aria-pressed) qui appelle onZoneOnlyToggle", () => {
+  it("le commutateur limite la recherche à la zone visible", () => {
     const props = makeProps({ zoneOnly: false });
     render(<MapControls {...props} />);
-    const loupe = screen.getByLabelText("Limiter à la zone visible");
-    expect(loupe.getAttribute("aria-pressed")).toBe("false");
-    fireEvent.click(loupe);
+    const zoneToggle = screen.getByRole("checkbox", { name: "Limiter la recherche à la zone visible" });
+    expect(zoneToggle).not.toBeChecked();
+    fireEvent.click(zoneToggle);
     expect(props.onZoneOnlyToggle).toHaveBeenCalled();
     fireEvent.click(screen.getByLabelText("Autour de moi"));
     expect(props.onLocate).toHaveBeenCalled();

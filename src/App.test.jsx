@@ -227,6 +227,19 @@ describe("App (intégration, fetch mocké)", () => {
     expect(fetch.mock.calls.some(([url]) => url.includes("/api/polygones?type_polygone=1"))).toBe(true);
   });
 
+  it("affiche l'erreur de chargement au lieu de laisser le spinner actif", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url) => {
+        if (String(url).includes("/api/bbox?bbox=")) throw new Error("Network unavailable");
+        return { ok: true, status: 200, json: async () => ({ features: [] }) };
+      })
+    );
+    render(<App />);
+    expect(await screen.findByText("Erreur de chargement : Network unavailable")).toBeInTheDocument();
+    expect(document.querySelector("#map-loading")).toBeNull();
+  });
+
   it("fond de carte par défaut = OpenTopoMap", async () => {
     render(<App />);
     await screen.findByText("Refuge Test");
@@ -266,11 +279,12 @@ describe("App (intégration, fetch mocké)", () => {
     expect(map.getAttribute("data-hiking-routes")).toBe("false");
   });
 
-  it("les contrôles flottants de la carte sont présents (fonds, interrupteur zone, position, filtres)", async () => {
+  it("les contrôles flottants de la carte sont présents (fonds, zone visible, position, filtres)", async () => {
     render(<App />);
     await screen.findByText("Refuge Test");
     expect(screen.getByLabelText("Fond de carte")).toBeInTheDocument();
-    expect(screen.getByLabelText("Limiter à la zone visible")).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "Limiter la recherche à la zone visible" })).toBeInTheDocument();
+    expect(screen.queryByText("Zone visible")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Autour de moi")).toBeInTheDocument();
     expect(screen.getByLabelText("Filtres")).toBeInTheDocument();
   });
@@ -536,7 +550,7 @@ describe("App (intégration, fetch mocké)", () => {
     expect(await screen.findByText(/non configuré/i)).toBeInTheDocument();
   });
 
-  it("l'interrupteur zone (loupe) limite la liste à la bbox visible", async () => {
+  it("le commutateur limite la liste à la bbox visible", async () => {
     render(<App />);
     await screen.findByText("Refuge Test");
     fireEvent.click(document.getElementById("tab-recherche"));
@@ -544,7 +558,7 @@ describe("App (intégration, fetch mocké)", () => {
     await screen.findByText("Cabane du Lac"); // id 42, dans la bbox
     expect(screen.getByText("Refuge du Goûter")).toBeInTheDocument(); // id 43, hors bbox
     // activer l'interrupteur zone
-    fireEvent.click(screen.getAllByLabelText("Limiter à la zone visible")[0]);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Limiter la recherche à la zone visible" }));
     await waitFor(() => expect(screen.queryByText("Refuge du Goûter")).not.toBeInTheDocument());
     expect(screen.getByText("Cabane du Lac")).toBeInTheDocument();
   });
