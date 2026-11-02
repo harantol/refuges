@@ -1,7 +1,7 @@
 import TypeFilters from "./TypeFilters";
 import IgnKeyForm from "./IgnKeyForm";
 import { BASEMAPS } from "../basemaps";
-import { IconLayers, IconSearch, IconLocate, IconFilter } from "./icons";
+import { IconLayers, IconLocate, IconFilter } from "./icons";
 
 // Boutons flottants sur la carte (visibles uniquement sur mobile, cf. CSS) :
 // style "Google Maps" — la barre d'outils n'encombre plus l'entête.
@@ -25,89 +25,91 @@ export default function MapControls({
   onIgnKeySave,
 }) {
   return (
-    <div id="map-controls">
-      <button
-        className={menu === "basemap" ? "active" : ""}
-        title="Fond de carte"
-        aria-label="Fond de carte"
-        onClick={() => onMenuToggle("basemap")}
-      >
-        <IconLayers />
-      </button>
-      <button
-        className={zoneOnly ? "active" : ""}
-        title="Interrupteur : limiter l'affichage à la zone visible sur la carte"
-        aria-label="Limiter à la zone visible"
-        aria-pressed={zoneOnly}
-        onClick={onZoneOnlyToggle}
-      >
-        <IconSearch />
-      </button>
-      <button
-        className={located ? "active" : ""}
-        title="Autour de moi (ma position)"
-        aria-label="Autour de moi"
-        onClick={onLocate}
-      >
-        <IconLocate />
-      </button>
-      <button
-        className={menu === "filters" ? "active" : ""}
-        title="Filtres (types, date)"
-        aria-label="Filtres"
-        onClick={() => onMenuToggle("filters")}
-      >
-        <IconFilter />
-      </button>
+    <>
+      <div id="map-controls">
+        <button
+          className={menu === "basemap" ? "active" : ""}
+          title="Fond de carte"
+          aria-label="Fond de carte"
+          onClick={() => onMenuToggle("basemap")}
+        >
+          <IconLayers />
+        </button>
+        <button
+          className={located ? "active" : ""}
+          title="Autour de moi (ma position)"
+          aria-label="Autour de moi"
+          onClick={onLocate}
+        >
+          <IconLocate />
+        </button>
+        <button
+          className={menu === "filters" ? "active" : ""}
+          title="Filtres (types, date)"
+          aria-label="Filtres"
+          onClick={() => onMenuToggle("filters")}
+        >
+          <IconFilter />
+        </button>
 
 
-      {menu === "basemap" && (
-        <div className="map-menu" role="dialog" aria-label="Choix du fond de carte">
-          <p className="map-menu-title">Fond de carte</p>
-          {Object.entries(BASEMAPS).map(([key, b]) => (
-            <label key={key}>
+        {menu === "basemap" && (
+          <div className="map-menu" role="dialog" aria-label="Choix du fond de carte">
+            <p className="map-menu-title">Fond de carte</p>
+            {Object.entries(BASEMAPS).map(([key, b]) => (
+              <label key={key}>
+                <input
+                  type="radio"
+                  name="basemap"
+                  checked={basemap === key}
+                  onChange={() => onBasemapChange(key)}
+                />
+                {b.label}
+              </label>
+            ))}
+            <label className="map-menu-pentes">
               <input
-                type="radio"
-                name="basemap"
-                checked={basemap === key}
-                onChange={() => onBasemapChange(key)}
+                type="checkbox"
+                checked={hillshade}
+                onChange={(e) => onHillshadeChange(e.target.checked)}
               />
-              {b.label}
+              ⛰️ Pentes (IGN)
             </label>
-          ))}
-          <label className="map-menu-pentes">
-            <input
-              type="checkbox"
-              checked={hillshade}
-              onChange={(e) => onHillshadeChange(e.target.checked)}
-            />
-            ⛰️ Pentes (IGN)
-          </label>
-          {basemap === "ign" && <IgnKeyForm onIgnKeySave={onIgnKeySave} />}
-        </div>
-      )}
+            {basemap === "ign" && <IgnKeyForm onIgnKeySave={onIgnKeySave} />}
+          </div>
+        )}
 
-      {menu === "filters" && (
-        <div className="map-menu" role="dialog" aria-label="Filtres">
-          <p className="map-menu-title">Filtres</p>
-          <TypeFilters
-            allTypes={allTypes}
-            typeCounts={typeCounts}
-            uncheckedTypes={uncheckedTypes}
-            onToggle={onToggleType}
-          />
-          <label className="map-menu-recent">
-            Modifié depuis
-            <select value={recentDays} onChange={(e) => onRecentChange(Number(e.target.value))}>
-              <option value={0}>Toutes les dates</option>
-              <option value={7}>7 jours</option>
-              <option value={30}>30 jours</option>
-              <option value={90}>90 jours</option>
-              <option value={365}>1 an</option>
-            </select>
-          </label>
-        </div>
-      )}
-    </div>
+        {menu === "filters" && (
+          <div className="map-menu" role="dialog" aria-label="Filtres">
+            <p className="map-menu-title">Filtres</p>
+            <TypeFilters
+              allTypes={allTypes}
+              typeCounts={typeCounts}
+              uncheckedTypes={uncheckedTypes}
+              onToggle={onToggleType}
+            />
+            <label className="map-menu-recent">
+              Modifié depuis
+              <select value={recentDays} onChange={(e) => onRecentChange(Number(e.target.value))}>
+                <option value={0}>Toutes les dates</option>
+                <option value={7}>7 jours</option>
+                <option value={30}>30 jours</option>
+                <option value={90}>90 jours</option>
+                <option value={365}>1 an</option>
+              </select>
+            </label>
+          </div>
+        )}
+      </div>
+      <label id="zone-only-control">
+        <input
+          type="checkbox"
+          checked={zoneOnly}
+          onChange={onZoneOnlyToggle}
+        />
+        <span className="zone-only-switch" aria-hidden="true" />
+        <span>Limiter la recherche à la zone visible</span>
+      </label>
+    </>
   );
 }

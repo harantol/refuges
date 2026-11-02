@@ -394,11 +394,6 @@ export default function App() {
     [massifs]
   );
 
-  const onZoneClick = useCallback(() => {
-    setMode({ type: "zone" });
-    setMassifQuery("");
-  }, []);
-
   const changeBasemap = useCallback((b) => {
     setBasemap(b);
     if (b === "ign") {
@@ -617,8 +612,6 @@ export default function App() {
         massifs={massifs}
         massifQuery={massifQuery}
         onMassifQueryChange={onMassifQueryChange}
-        onZoneClick={onZoneClick}
-        zoneActive={mode.type === "zone"}
         user={user}
         accountOpen={accountOpen}
         onAccountToggle={() => setAccountOpen((v) => !v)}
