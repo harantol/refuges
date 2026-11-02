@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.0](https://github.com/harantol/refuges/compare/explorateur-refuges-v1.1.0...explorateur-refuges-v1.2.0) (2026-11-02)
+
+
+### Features
+
+* display app version in footer ([c57f800](https://github.com/harantol/refuges/commit/c57f800b30fe53e9a4f9683b7956e3cb3fd35704))
+* display app version in footer ([aca771f](https://github.com/harantol/refuges/commit/aca771fbc12acaaf0c38f7bcb8ac696f2872eb7e))
+* release develop to main ([e1bbfe0](https://github.com/harantol/refuges/commit/e1bbfe0b1560d89a6797168ab358995070ca0ae4))
+
 ## [1.1.0](https://github.com/harantol/refuges/compare/explorateur-refuges-v1.0.0...explorateur-refuges-v1.1.0) (2026-11-02)
 
 
