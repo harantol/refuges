@@ -7,7 +7,7 @@ Site web en **React 18 + Vite + react-leaflet** qui interroge l'[API publique de
 - Carte Leaflet avec chargement dynamique via `GET /api/bbox` (zone visible) ou `GET /api/massif`, clustering des marqueurs et annulation des chargements obsolètes
 - **Icônes officielles refuges.info** par type de point (`type.icone` de l'API, servies depuis `/images/icones/`), pastille colorée en fallback — sur la carte, la liste et la fiche
 - **Filtres par type** : liste toujours exhaustive (tous les types connus de l'API), compteurs par zone, état conservé entre les rechargements
-- **🔎 Recherche détaillée** dans toute la base : nom, types, altitude min/max, places min, état, et **tous les équipements** (cheminée, poêle, eau, bois, couvertures, latrines, manque un mur — Oui/Non/Indifférent). Base `simple` (3,8 Mo, cache sessionStorage) + base `complet` (~20 Mo, chargée une seule fois en mémoire) pour les équipements
+- **🔎 Recherche détaillée** dans toute la base : nom, types, altitude min/max, places min, état, accès nécessitant de récupérer une clé, et **tous les équipements** (cheminée, poêle, eau, bois, couvertures, latrines, manque un mur — Oui/Non/Indifférent). Base `simple` (3,8 Mo, cache sessionStorage) + base `complet` (~20 Mo, chargée une seule fois en mémoire) pour les filtres détaillés
 - Fiche détaillée (`/api/point?id=...&detail=fiche`) : infos clés + équipements en pastilles en premier, accès/remarques en HTML sanitizé (DOMPurify), **galerie photos avec diaporama (lightbox)** + légendes (commentaire, auteur, date), commentaires datés, lien vers la fiche refuges.info
 - **Fonds de carte** : OpenTopoMap (défaut), OSM, OSM France HOT, satellite Esri, **IGN Plan v2** et **IGN BDUNI J1** (officiels, open data, sans clé via data.geopf.fr), **IGN Top 25** (avec clé API Géoplateforme, saisie dans l'UI)
 - **Case « Pentes »** : couche officielle **IGN SLOPES.MOUNTAIN** (open data, sans clé) en overlay
@@ -64,7 +64,7 @@ grant select, insert, update, delete on public.favoris to authenticated;
 
 ## Tests & CI
 
-- `npm test` : **164 tests** (Vitest + jsdom + Testing Library) — unitaires (api, geo, utils, types), composants (Header, Sidebar, PointList, Fiche, SearchPanel, TypeFilters, SafeHtml, Lightbox) et intégration App (fetch mocké)
+- `npm test` : **166 tests** (Vitest + jsdom + Testing Library) — unitaires (api, geo, utils, types), composants (Header, Sidebar, PointList, Fiche, SearchPanel, TypeFilters, SafeHtml, Lightbox) et intégration App (fetch mocké)
 - CI GitHub Actions (`.github/workflows/ci.yml`) : `npm ci` → `npm test` → `npm run build` → artifact `dist/`
 - Déploiement auto sur GitHub Pages (`.github/workflows/deploy.yml`) à chaque push sur `main` → https://harantol.github.io/refuges/
 

@@ -14,6 +14,7 @@ export default function SearchPanel({ onSearch, onReset, searching, resultCount 
   const [altMax, setAltMax] = useState("");
   const [placesMin, setPlacesMin] = useState("");
   const [etat, setEtat] = useState("");
+  const [requiresKey, setRequiresKey] = useState("");
   const [types, setTypes] = useState(() => new Set(ALL_TYPE_IDS));
   const [equip, setEquip] = useState({}); // clé info_comp -> "" | "oui" | "non"
 
@@ -23,6 +24,7 @@ export default function SearchPanel({ onSearch, onReset, searching, resultCount 
     altMax: toNum(altMax),
     placesMin: toNum(placesMin),
     etat,
+    requiresKey: requiresKey === "" ? null : requiresKey === "oui",
     // null = tous les types cochés (pas de filtre)
     types: types.size === ALL_TYPE_IDS.length ? null : types,
     equip,
@@ -57,6 +59,7 @@ export default function SearchPanel({ onSearch, onReset, searching, resultCount 
     setAltMax("");
     setPlacesMin("");
     setEtat("");
+    setRequiresKey("");
     setTypes(new Set(ALL_TYPE_IDS));
     setEquip({});
     onReset();
@@ -132,6 +135,16 @@ export default function SearchPanel({ onSearch, onReset, searching, resultCount 
           <option value="fermé">Fermé</option>
         </select>
       </label>
+
+      <label className="full">
+        Nécessite une clé
+        <select value={requiresKey} onChange={(e) => setRequiresKey(e.target.value)}>
+          <option value="">Indifférent</option>
+          <option value="oui">Oui — clé à récupérer</option>
+          <option value="non">Non</option>
+        </select>
+      </label>
+      <p className="muted small">Filtre selon l’indication « clé à récupérer » de refuges.info.</p>
 
       <fieldset>
         <legend>Équipements &amp; confort (métadonnées des fiches)</legend>

@@ -109,6 +109,7 @@ const detailAllData = {
         type: { id: 7, valeur: "cabane non gardée" },
         coord: { alt: 1500 },
         info_comp: { cheminee: { nom: "Cheminée", valeur: "Oui" }, poele: { nom: "Poêle", valeur: "Non" } },
+        etat: { id: "cle_a_recuperer", valeur: "Ouverture sur contact préalable" },
       },
     },
     {
@@ -119,6 +120,7 @@ const detailAllData = {
         type: { id: 10, valeur: "refuge gardé" },
         coord: { alt: 3835 },
         info_comp: { cheminee: { nom: "Cheminée", valeur: "Non" }, poele: { nom: "Poêle", valeur: "Non" } },
+        etat: { id: "ouverture", valeur: "Ouvert" },
       },
     },
     {
@@ -393,6 +395,17 @@ describe("App (intégration, fetch mocké)", () => {
     expect(fetch.mock.calls.some(([url]) => /bbox=world.*detail=complet/.test(url))).toBe(true);
     const detailUrl = fetch.mock.calls.map((c) => c[0]).find((u) => u.includes("detail=complet"));
     expect(detailUrl).not.toContain("format_texte=html");
+  });
+
+  it("recherche les points indiqués comme nécessitant une clé à récupérer", async () => {
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    fireEvent.click(screen.getByText("🔎 Recherche"));
+    fireEvent.change(screen.getByLabelText("Nécessite une clé"), { target: { value: "oui" } });
+    fireEvent.click(screen.getByRole("button", { name: /Rechercher/i }));
+    expect(await screen.findByText("Cabane du Lac")).toBeInTheDocument();
+    expect(screen.queryByText("Refuge du Goûter")).not.toBeInTheDocument();
+    expect(fetch.mock.calls.some(([url]) => /bbox=world.*detail=complet/.test(url))).toBe(true);
   });
 
   it("recherche équipements avec >800 candidats : charge la base complète détaillée (pas de cap arbitraire)", async () => {

@@ -246,16 +246,22 @@ export default function App() {
         const equipEntries = Object.entries(params.equip || {}).filter(
           ([, v]) => v === "oui" || v === "non"
         );
+        const keyFilterActive = params.requiresKey != null;
         let res = applyBaseFilters(all, params);
 
-        if (equipEntries.length > 0) {
-          // info_comp n'existe qu'en detail=complet. /api/point ne prenant qu'un id
-          // à la fois, on charge la base complète détaillée (~20 Mo, une seule fois
-          // en mémoire) et on filtre tout dessus — fiable, sans perte de résultats.
+        if (equipEntries.length > 0 || keyFilterActive) {
+          // info_comp et etat.id n'existent qu'en detail=complet. On charge la base
+          // complète détaillée (~20 Mo, une seule fois en mémoire) pour filtrer sans perte.
           setStatus("Chargement de la base détaillée (~20 Mo, une fois pour toutes)…");
           const allDetail = await loadAllDetail();
           if (token !== searchTokenRef.current) return;
-          res = applyBaseFilters(allDetail, params).filter((f) => matchEquip(f, equipEntries));
+          res = applyBaseFilters(allDetail, params).filter((f) => {
+            const requiresKey = f.properties?.etat?.id === "cle_a_recuperer";
+            return (
+              (!keyFilterActive || requiresKey === params.requiresKey) &&
+              matchEquip(f, equipEntries)
+            );
+          });
         }
 
         if (token !== searchTokenRef.current) return;
