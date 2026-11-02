@@ -61,12 +61,52 @@ describe("api refuges.info - construction des URLs", () => {
     expect(data.features.map((f) => f.id)).toEqual([1, 2, 583]);
   });
 
+  it("borne à six le nombre d'appels simultanés pour une liste de points", async () => {
+    let active = 0;
+    let maxActive = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        (url) =>
+          new Promise((resolve) => {
+            active += 1;
+            maxActive = Math.max(maxActive, active);
+            setTimeout(() => {
+              active -= 1;
+              const id = Number(/id=(\d+)/.exec(url)[1]);
+              resolve({ ok: true, json: async () => ({ features: [{ id }] }) });
+            }, 0);
+          })
+      )
+    );
+
+    const data = await fetchPointsByIds(Array.from({ length: 14 }, (_, i) => i + 1));
+    expect(maxActive).toBe(6);
+    expect(data.features.map((feature) => feature.id)).toEqual(
+      Array.from({ length: 14 }, (_, i) => i + 1)
+    );
+  });
+
+  it("ne masque pas l'échec d'un appel de point", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: false, status: 503 }))
+    );
+    await expect(fetchPointsByIds([1, 2])).rejects.toThrow("HTTP 503");
+  });
+
   it("fetchFiche demande detail=fiche + format_texte=html", async () => {
     await fetchFiche(583);
     const url = fetch.mock.calls[0][0];
     expect(url).toContain("/api/point?id=583");
     expect(url).toContain("detail=fiche");
     expect(url).toContain("format_texte=html");
+  });
+
+  it("transmet un AbortSignal aux appels annulables", async () => {
+    const controller = new AbortController();
+    await fetchZone("world", 0, { signal: controller.signal });
+    expect(fetch.mock.calls[0][1].signal).toBe(controller.signal);
   });
 
   it("fetchPointsDetail : un appel par id en detail=complet, SANS format_texte (sinon HTTP 500)", async () => {

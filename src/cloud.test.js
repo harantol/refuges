@@ -57,6 +57,85 @@ describe("cloud (Supabase REST)", () => {
     expect(opts.headers.Authorization).toBe("Bearer tok-abc");
   });
 
+  it("me() conserve le token si la vérification échoue pour une raison réseau", async () => {
+    localStorage.setItem("cloud-auth-token", "tok-abc");
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("offline"); }));
+
+    await expect(auth.me()).rejects.toThrow("offline");
+    expect(getToken()).toBe("tok-abc");
+  });
+
+  it("me() efface le token si Supabase le refuse", async () => {
+    localStorage.setItem("cloud-auth-token", "tok-abc");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: false,
+        status: 401,
+        json: async () => ({ message: "Invalid token" }),
+      }))
+    );
+
+    await expect(auth.me()).resolves.toBeNull();
+    expect(getToken()).toBeNull();
+  });
+
+  it("me() renouvelle un token expiré et conserve le nouveau refresh token", async () => {
+    localStorage.setItem("cloud-auth-token", "expired");
+    localStorage.setItem("cloud-auth-refresh-token", "refresh-old");
+    let userRequests = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url) => {
+        if (url.includes("grant_type=refresh_token")) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              access_token: "access-new",
+              refresh_token: "refresh-new",
+            }),
+          };
+        }
+        userRequests += 1;
+        if (userRequests === 1) {
+          return {
+            ok: false,
+            status: 401,
+            json: async () => ({ message: "Expired token" }),
+          };
+        }
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ id: "u1", email: "a@b.c" }),
+        };
+      })
+    );
+
+    await expect(auth.me()).resolves.toEqual({ id: "u1", email: "a@b.c" });
+    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(getToken()).toBe("access-new");
+    expect(localStorage.getItem("cloud-auth-refresh-token")).toBe("refresh-new");
+  });
+
+  it("me() efface les tokens si le refresh token est invalide", async () => {
+    localStorage.setItem("cloud-auth-token", "expired");
+    localStorage.setItem("cloud-auth-refresh-token", "invalid-refresh");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url) => ({
+        ok: false,
+        status: url.includes("grant_type=refresh_token") ? 400 : 401,
+        json: async () => ({ message: "Invalid token" }),
+      }))
+    );
+
+    await expect(auth.me()).resolves.toBeNull();
+    expect(getToken()).toBeNull();
+    expect(localStorage.getItem("cloud-auth-refresh-token")).toBeNull();
+  });
+
   it("favorisCloud.list parse les point_id et filtre par user", async () => {
     localStorage.setItem("cloud-auth-token", "tok-abc");
     const ids = await favorisCloud.list("u1");

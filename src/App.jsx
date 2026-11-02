@@ -64,10 +64,14 @@ export default function App() {
   const [searching, setSearching] = useState(false);
   const allPointsRef = useRef(null);
   const allDetailRef = useRef(null);
+  const searchTokenRef = useRef(0);
   const fetchToken = useRef(0);
+  const ficheRequestRef = useRef(null);
+  const ficheTokenRef = useRef(0);
 
   useEffect(() => {
-    fetchMassifs()
+    const controller = new AbortController();
+    fetchMassifs({ signal: controller.signal })
       .then((d) =>
         setMassifs(
           (d.features || [])
@@ -76,20 +80,26 @@ export default function App() {
             .sort((a, b) => a.nom.localeCompare(b.nom, "fr"))
         )
       )
-      .catch(() => setStatus("Impossible de charger la liste des massifs"));
+      .catch((e) => {
+        if (!controller.signal.aborted) {
+          setStatus("Impossible de charger la liste des massifs : " + e.message);
+        }
+      });
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
     if (mode.type === "favoris") return; // géré par l'effet dédié ci-dessous
     const token = ++fetchToken.current;
+    const controller = new AbortController();
     let promise;
     if (mode.type === "zone") {
       if (!bbox) return;
       setStatus("Chargement de la zone visible…");
-      promise = fetchZone(bbox, recentDays);
+      promise = fetchZone(bbox, recentDays, { signal: controller.signal });
     } else {
       setStatus("Chargement du massif…");
-      promise = fetchMassifPoints(mode.id, recentDays);
+      promise = fetchMassifPoints(mode.id, recentDays, { signal: controller.signal });
     }
     promise
       .then((data) => {
@@ -99,9 +109,10 @@ export default function App() {
         setStatus("");
       })
       .catch((e) => {
-        if (token !== fetchToken.current) return;
+        if (token !== fetchToken.current || controller.signal.aborted) return;
         setStatus("Erreur de chargement : " + e.message);
       });
+    return () => controller.abort();
   }, [mode, bbox, recentDays]);
 
   useEffect(() => {
@@ -114,8 +125,9 @@ export default function App() {
       setStatus("Aucun favori — cliquez sur ☆ dans la liste ou la fiche");
       return;
     }
+    const controller = new AbortController();
     setStatus("Chargement des favoris…");
-    fetchPointsByIds(ids)
+    fetchPointsByIds(ids, { signal: controller.signal })
       .then((data) => {
         if (token !== fetchToken.current) return;
         setFeatures(data.features || []);
@@ -123,8 +135,11 @@ export default function App() {
         setStatus("");
       })
       .catch((e) => {
-        if (token === fetchToken.current) setStatus("Erreur de chargement : " + e.message);
+        if (token === fetchToken.current && !controller.signal.aborted) {
+          setStatus("Erreur de chargement des favoris : " + e.message);
+        }
       });
+    return () => controller.abort();
   }, [mode, favorites, favOverride]);
 
   // Liste des types TOUJOURS exhaustive : les types connus de l'API (TYPE_LABELS),
@@ -222,10 +237,12 @@ export default function App() {
   // Recherche détaillée multi-critères dans toute la base
   const runSearch = useCallback(
     async (params) => {
+      const token = ++searchTokenRef.current;
       setSearching(true);
       setStatus("Recherche dans toute la base…");
       try {
         const all = await loadAllPoints();
+        if (token !== searchTokenRef.current) return;
         const equipEntries = Object.entries(params.equip || {}).filter(
           ([, v]) => v === "oui" || v === "non"
         );
@@ -237,24 +254,28 @@ export default function App() {
           // en mémoire) et on filtre tout dessus — fiable, sans perte de résultats.
           setStatus("Chargement de la base détaillée (~20 Mo, une fois pour toutes)…");
           const allDetail = await loadAllDetail();
+          if (token !== searchTokenRef.current) return;
           res = applyBaseFilters(allDetail, params).filter((f) => matchEquip(f, equipEntries));
         }
 
+        if (token !== searchTokenRef.current) return;
         res = res.slice(0, 500);
         setSearchResults(res);
         setSearchCount(res.length);
         setStatus(`${res.length} résultat(s)`);
         setTab("liste"); // afficher les résultats dans la liste
       } catch (e) {
-        setStatus("Erreur de recherche : " + e.message);
+        if (token === searchTokenRef.current) setStatus("Erreur de recherche : " + e.message);
       } finally {
-        setSearching(false);
+        if (token === searchTokenRef.current) setSearching(false);
       }
     },
     [loadAllPoints, loadAllDetail]
   );
 
   const clearSearch = useCallback(() => {
+    searchTokenRef.current += 1;
+    setSearching(false);
     setSearchResults(null);
     setSearchCount(null);
     setStatus("");
@@ -295,6 +316,10 @@ export default function App() {
   }, []);
 
   const selectPoint = useCallback((id) => {
+    ficheRequestRef.current?.abort();
+    const controller = new AbortController();
+    ficheRequestRef.current = controller;
+    const token = ++ficheTokenRef.current;
     setSelectedId(id);
     setTab("fiche");
     setPanelOpen(true); // sur mobile, déplier le panneau pour voir la fiche
@@ -305,8 +330,9 @@ export default function App() {
     } catch {
       /* history indisponible */
     }
-    fetchFiche(id)
+    fetchFiche(id, { signal: controller.signal })
       .then((data) => {
+        if (token !== ficheTokenRef.current) return;
         const f = data.features?.[0] || null;
         // En detail=fiche, type perd son id/icone : on les récupère de la feature d'origine
         if (f && !f.properties?.type?.id) {
@@ -323,8 +349,21 @@ export default function App() {
         const c = f?.geometry?.coordinates;
         if (c) setFocus([c[1], c[0]]);
       })
-      .catch((e) => setFiche({ error: e.message }))
-      .finally(() => setFicheLoading(false));
+      .catch((e) => {
+        if (token === ficheTokenRef.current && !controller.signal.aborted) {
+          setFiche({ error: e.message });
+        }
+      })
+      .finally(() => {
+        if (token === ficheTokenRef.current) setFicheLoading(false);
+      });
+  }, []);
+
+  useEffect(() => () => ficheRequestRef.current?.abort(), []);
+
+  const closeMenus = useCallback(() => {
+    setMapMenu(null);
+    setPanelOpen(false);
   }, []);
 
   const locate = useCallback(() => {
@@ -433,7 +472,13 @@ export default function App() {
   // Restauration de la session au chargement
   useEffect(() => {
     (async () => {
-      const u = await auth.me();
+      let u;
+      try {
+        u = await auth.me();
+      } catch (e) {
+        setStatus("Impossible de restaurer la session : " + e.message);
+        return;
+      }
       if (!u) return;
       setUser(u);
       try {
@@ -503,6 +548,8 @@ export default function App() {
       if (t === "favoris") {
         setMode({ type: "favoris" });
         // quitter une recherche active en allant aux favoris
+        searchTokenRef.current += 1;
+        setSearching(false);
         setSearchResults(null);
         setSearchCount(null);
       } else if (tab === "favoris" && t === "liste") {
@@ -583,7 +630,7 @@ export default function App() {
       />
       <main>
         <div id="map-area">
-          <MapView features={displayedFeatures} onSelect={selectPoint} onNavigate={onNavigate} onCloseMenus={() => { setMapMenu(null); setPanelOpen(false); }} focus={focus} basemap={basemap} userPos={userPos} hillshade={hillshade} fitToFeatures={mode.type === "massif"} />
+          <MapView features={displayedFeatures} onSelect={selectPoint} onNavigate={onNavigate} onCloseMenus={closeMenus} focus={focus} basemap={basemap} userPos={userPos} hillshade={hillshade} fitToFeatures={mode.type === "massif"} />
           <MapStatus loading={loading} status={status} />
           <MapControls
             basemap={basemap}

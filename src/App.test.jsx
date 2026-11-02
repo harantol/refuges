@@ -7,7 +7,7 @@ import { TYPE_LABELS } from "./types";
 vi.mock("./components/MapView", async () => {
   const React = await import("react");
   return {
-    default: ({ onNavigate, basemap, hillshade, onCloseMenus, fitToFeatures }) => {
+    default: ({ onNavigate, basemap, hillshade, onCloseMenus, fitToFeatures, features, onSelect }) => {
       React.useEffect(() => {
         onNavigate("6.0,45.5,7.0,46.0");
       }, [onNavigate]);
@@ -23,6 +23,13 @@ vi.mock("./components/MapView", async () => {
           "button",
           { "data-testid": "map-click", onClick: onCloseMenus },
           "clic carte"
+        ),
+        ...features.map((feature, index) =>
+          React.createElement("button", {
+            key: `${feature.id}-${index}`,
+            "data-testid": `map-point-${feature.id}`,
+            onClick: () => onSelect(feature.id),
+          })
         )
       );
     },
@@ -139,6 +146,8 @@ const detailAllData = {
 
 // Base "simple" monde et base "complet" monde, surchargeables par test
 let allDataMock = allData;
+let zoneDataMock = zoneData;
+let ficheRequests = null;
 const allDataBig = {
   size: 900,
   features: Array.from({ length: 900 }, (_, i) => ({
@@ -152,6 +161,8 @@ beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
   allDataMock = allData;
+  zoneDataMock = zoneData;
+  ficheRequests = null;
   try {
     history.replaceState(null, "", window.location.pathname); // reset du hash entre les tests
   } catch {
@@ -171,11 +182,30 @@ beforeEach(() => {
       }
       if (url.includes("/api/polygones")) return json(massifsData);
       if (url.includes("/api/massif")) return json(massifData);
-      if (url.includes("detail=fiche")) return json(ficheData);
+      if (url.includes("detail=fiche")) {
+        const id = Number(/id=(\d+)/.exec(url)?.[1]);
+        const data = id === 2 ? {
+          features: [{
+            id: 2,
+            geometry: { coordinates: [6.2, 45.8] },
+            properties: { nom: "Latest Refuge", type: { valeur: "refuge gardé" }, coord: { alt: 2100 } },
+          }],
+        } : ficheData;
+        if (ficheRequests) {
+          return new Promise((resolve) => ficheRequests.set(id, () => resolve(json(data))));
+        }
+        return json(data);
+      }
       if (url.includes("detail=complet") && url.includes("bbox=world")) return json(detailAllData);
       if (url.includes("/api/bbox") && url.includes("nb_points=all")) return json(allDataMock);
-      if (url.includes("/api/bbox")) return json(zoneData);
-      if (url.includes("/api/point")) return json(zoneData);
+      if (url.includes("/api/bbox")) return json(zoneDataMock);
+      if (url.includes("/api/point")) {
+        const id = Number(/id=(\d+)/.exec(url)?.[1]);
+        return json({
+          ...zoneData,
+          features: zoneData.features.map((feature) => ({ ...feature, id })),
+        });
+      }
       return json({ features: [] });
     })
   );
@@ -190,8 +220,8 @@ describe("App (intégration, fetch mocké)", () => {
   it("charge la zone visible au montage et affiche le point dans la liste", async () => {
     render(<App />);
     expect(await screen.findByText("Refuge Test")).toBeInTheDocument();
-    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/bbox?bbox=6.0,45.5,7.0,46.0"));
-    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/polygones?type_polygone=1"));
+    expect(fetch.mock.calls.some(([url]) => url.includes("/api/bbox?bbox=6.0,45.5,7.0,46.0"))).toBe(true);
+    expect(fetch.mock.calls.some(([url]) => url.includes("/api/polygones?type_polygone=1"))).toBe(true);
   });
 
   it("fond de carte par défaut = OpenTopoMap", async () => {
@@ -259,7 +289,7 @@ describe("App (intégration, fetch mocké)", () => {
     render(<App />);
     fireEvent.click(await screen.findByText("Refuge Test"));
     expect(await screen.findByText(/2000 m/)).toBeInTheDocument();
-    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("detail=fiche"));
+    expect(fetch.mock.calls.some(([url]) => url.includes("detail=fiche"))).toBe(true);
     expect(document.getElementById("sidebar").className).toContain("open"); // panneau déplié
   });
 
@@ -271,6 +301,41 @@ describe("App (intégration, fetch mocké)", () => {
     expect(container.querySelector("img.fiche-icon")?.getAttribute("src")).toBe(
       "https://www.refuges.info/images/icones/cabane_red.png"
     );
+  });
+
+  it("ignore une fiche en retard et annule sa requête quand un autre point est sélectionné", async () => {
+    zoneDataMock = {
+      ...zoneData,
+      size: 2,
+      features: [
+        ...zoneData.features,
+        {
+          id: 2,
+          geometry: { coordinates: [6.2, 45.8] },
+          properties: { nom: "Second Refuge", type: { id: 10, valeur: "refuge gardé" } },
+        },
+      ],
+    };
+    ficheRequests = new Map();
+    render(<App />);
+    await screen.findByText("Refuge Test");
+
+    fireEvent.click(screen.getByTestId("map-point-1"));
+    fireEvent.click(screen.getByTestId("map-point-2"));
+    await waitFor(() => expect(ficheRequests.size).toBe(2));
+
+    const firstCall = fetch.mock.calls.find(
+      ([url]) => url.includes("detail=fiche") && url.includes("id=1")
+    );
+    expect(firstCall[1].signal.aborted).toBe(true);
+
+    ficheRequests.get(2)();
+    expect(await screen.findByRole("heading", { name: "Latest Refuge" })).toBeInTheDocument();
+    ficheRequests.get(1)();
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Latest Refuge" })).toBeInTheDocument()
+    );
+    expect(screen.queryByRole("heading", { name: "Refuge Test" })).not.toBeInTheDocument();
   });
 
   it("l'onglet Favoris charge chaque favori par un appel /api/point individuel", async () => {
@@ -291,7 +356,7 @@ describe("App (intégration, fetch mocké)", () => {
     expect(screen.getByTestId("map").getAttribute("data-fit")).toBe("false");
     fireEvent.change(screen.getByPlaceholderText(/massif/i), { target: { value: "Vanoise" } });
     expect(await screen.findByText("Refuge Massif")).toBeInTheDocument();
-    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/massif?massif=351"));
+    expect(fetch.mock.calls.some(([url]) => url.includes("/api/massif?massif=351"))).toBe(true);
     expect(screen.getByTestId("map").getAttribute("data-fit")).toBe("true"); // BoundsController -> fitBounds
   });
 
@@ -303,7 +368,7 @@ describe("App (intégration, fetch mocké)", () => {
     fireEvent.click(screen.getByRole("button", { name: /Rechercher/i }));
     expect(await screen.findByText("Cabane du Lac")).toBeInTheDocument();
     expect(screen.queryByText("Refuge Test")).not.toBeInTheDocument();
-    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("bbox=world"));
+    expect(fetch.mock.calls.some(([url]) => url.includes("bbox=world"))).toBe(true);
   });
 
   it("recherche détaillée filtre par altitude min", async () => {
@@ -325,7 +390,7 @@ describe("App (intégration, fetch mocké)", () => {
     expect(await screen.findByText("Cabane du Lac")).toBeInTheDocument();
     expect(screen.queryByText("Refuge du Goûter")).not.toBeInTheDocument();
     // base complète demandée en detail=complet, SANS format_texte=html (sinon HTTP 500)
-    expect(fetch).toHaveBeenCalledWith(expect.stringMatching(/bbox=world.*detail=complet/));
+    expect(fetch.mock.calls.some(([url]) => /bbox=world.*detail=complet/.test(url))).toBe(true);
     const detailUrl = fetch.mock.calls.map((c) => c[0]).find((u) => u.includes("detail=complet"));
     expect(detailUrl).not.toContain("format_texte=html");
   });
@@ -340,7 +405,7 @@ describe("App (intégration, fetch mocké)", () => {
     // P900 (poêle=Oui, au-delà du cap de 800) est trouvé ; P1 (poêle=Non) est exclu
     expect(await screen.findByText("P900")).toBeInTheDocument();
     expect(screen.queryByText("P1")).not.toBeInTheDocument();
-    expect(fetch).toHaveBeenCalledWith(expect.stringMatching(/bbox=world.*detail=complet/));
+    expect(fetch.mock.calls.some(([url]) => /bbox=world.*detail=complet/.test(url))).toBe(true);
   });
 
   it("affiche tous les types connus dans les filtres, même absents de la zone courante", async () => {
@@ -363,7 +428,7 @@ describe("App (intégration, fetch mocké)", () => {
     // simuler un rechargement via le filtre 'depuis' (menu entonnoir déjà ouvert)
     fireEvent.change(screen.getByLabelText(/Modifié depuis/), { target: { value: "30" } });
     await waitFor(() =>
-      expect(fetch).toHaveBeenCalledWith(expect.stringContaining("depuis=-2592000"))
+      expect(fetch.mock.calls.some(([url]) => url.includes("depuis=-2592000"))).toBe(true)
     );
     // le menu Filtres est toujours ouvert : après rechargement, toujours 7 cases
     await waitFor(() =>
@@ -385,14 +450,14 @@ describe("App (intégration, fetch mocké)", () => {
     await screen.findByText("Cabane du Lac");
     fireEvent.click(screen.getByRole("button", { name: /Favoris/ }));
     await waitFor(() => expect(screen.queryByText("Cabane du Lac")).not.toBeInTheDocument());
-    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/point?id=1&"));
+    expect(fetch.mock.calls.some(([url]) => url.includes("/api/point?id=1&"))).toBe(true);
   });
 
   it("au chargement avec #point=1, ouvre directement la fiche du point", async () => {
     window.location.hash = "#point=1";
     render(<App />);
     expect(await screen.findByText(/2000 m/)).toBeInTheDocument();
-    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("detail=fiche"));
+    expect(fetch.mock.calls.some(([url]) => url.includes("detail=fiche"))).toBe(true);
     window.location.hash = "";
   });
 
@@ -545,7 +610,7 @@ describe("App (intégration, fetch mocké)", () => {
     expect(JSON.parse(localStorage.getItem("refuges-favoris"))).toEqual([1]);
     fireEvent.click(screen.getByText(/Favoris/));
     await waitFor(() =>
-      expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/point?id=1"))
+      expect(fetch.mock.calls.some(([url]) => url.includes("/api/point?id=1"))).toBe(true)
     );
   });
 
@@ -555,7 +620,7 @@ describe("App (intégration, fetch mocké)", () => {
     fireEvent.click(screen.getByLabelText("Filtres")); // ouvre le menu filtres
     fireEvent.change(screen.getByLabelText(/Modifié depuis/), { target: { value: "30" } });
     await waitFor(() =>
-      expect(fetch).toHaveBeenCalledWith(expect.stringContaining("depuis=-2592000"))
+      expect(fetch.mock.calls.some(([url]) => url.includes("depuis=-2592000"))).toBe(true)
     );
   });
 });
