@@ -289,11 +289,11 @@ export default function App() {
     setStatus("");
   }, []);
 
-  // En mode favoris, on n'affiche jamais les résultats de recherche (bug : ils polluaient la liste)
-  // Interrupteur "zone" : si activé, on ne garde que les points dans la bbox visible
+  // Les résultats de recherche remplacent la liste courante, y compris les favoris.
+  // Interrupteur "zone" : si activé, on ne garde que les points dans la bbox visible.
   const [zoneOnly, setZoneOnly] = useState(false);
   const displayedFeatures = useMemo(() => {
-    let list = mode.type === "favoris" || !searchResults ? visibleFeatures : searchResults;
+    let list = searchResults ?? visibleFeatures;
     if (zoneOnly && bbox) {
       const [w, s, e, n] = bbox.split(",").map(Number);
       list = list.filter((f) => {

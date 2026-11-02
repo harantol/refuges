@@ -496,6 +496,23 @@ describe("App (intégration, fetch mocké)", () => {
     expect(fetch.mock.calls.some(([url]) => url.includes("/api/point?id=1&"))).toBe(true);
   });
 
+  it("les résultats d'une recherche remplacent les favoris affichés dans la liste", async () => {
+    localStorage.setItem("refuges-favoris", JSON.stringify([1]));
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    fireEvent.click(screen.getByRole("button", { name: /Favoris/ }));
+    await waitFor(() => expect(document.querySelector('#point-list li[data-id="1"]')).not.toBeNull());
+
+    fireEvent.click(document.getElementById("tab-recherche"));
+    fireEvent.change(screen.getByPlaceholderText(/Nom du refuge/i), { target: { value: "lac" } });
+    fireEvent.click(screen.getByRole("button", { name: /Rechercher/i }));
+
+    expect(await screen.findByText("Cabane du Lac")).toBeInTheDocument();
+    expect(screen.queryByText("Refuge Test")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTitle("Effacer la recherche"));
+    expect(await screen.findByText("Refuge Test")).toBeInTheDocument();
+  });
+
   it("au chargement avec #point=1, ouvre directement la fiche du point", async () => {
     window.location.hash = "#point=1";
     render(<App />);
