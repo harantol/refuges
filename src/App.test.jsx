@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import packageJson from "../package.json";
 import App from "./App";
 import { TYPE_LABELS } from "./types";
 
@@ -223,6 +224,7 @@ describe("App (intégration, fetch mocké)", () => {
   it("charge la zone visible au montage et affiche le point dans la liste", async () => {
     render(<App />);
     expect(await screen.findByText("Refuge Test")).toBeInTheDocument();
+    expect(screen.getByTitle(`Version ${packageJson.version}`)).toHaveTextContent(`v${packageJson.version}`);
     expect(fetch.mock.calls.some(([url]) => url.includes("/api/bbox?bbox=6.0,45.5,7.0,46.0"))).toBe(true);
     expect(fetch.mock.calls.some(([url]) => url.includes("/api/polygones?type_polygone=1"))).toBe(true);
   });
