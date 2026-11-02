@@ -32,6 +32,7 @@ describe("SearchPanel", () => {
       altMax: 4000,
       placesMin: 20,
       etat: "ouvert",
+      requiresKey: null,
       types: null, // tous les types cochés = pas de filtre
       equip: {},
     });
@@ -45,6 +46,14 @@ describe("SearchPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: /Rechercher/i }));
     const params = onSearch.mock.calls[0][0];
     expect(params.equip).toEqual({ cheminee: "oui", eau: "non" });
+  });
+
+  it("envoie le critère d'accès avec une clé", () => {
+    const onSearch = vi.fn();
+    renderPanel({ onSearch });
+    fireEvent.change(screen.getByLabelText("Nécessite une clé"), { target: { value: "oui" } });
+    fireEvent.click(screen.getByRole("button", { name: /Rechercher/i }));
+    expect(onSearch.mock.calls[0][0].requiresKey).toBe(true);
   });
 
   it("envoie le set de types quand au moins un type est décoché", () => {
@@ -67,6 +76,7 @@ describe("SearchPanel", () => {
     expect(params.altMax).toBeNull();
     expect(params.placesMin).toBeNull();
     expect(params.q).toBe("");
+    expect(params.requiresKey).toBeNull();
     expect(params.equip).toEqual({});
   });
 
@@ -74,9 +84,11 @@ describe("SearchPanel", () => {
     const onReset = vi.fn();
     renderPanel({ onReset });
     fireEvent.change(screen.getByPlaceholderText(/Nom du refuge/i), { target: { value: "abc" } });
+    fireEvent.change(screen.getByLabelText("Nécessite une clé"), { target: { value: "oui" } });
     fireEvent.click(screen.getByRole("button", { name: /Réinitialiser/i }));
     expect(onReset).toHaveBeenCalled();
     expect(screen.getByPlaceholderText(/Nom du refuge/i)).toHaveValue("");
+    expect(screen.getByLabelText("Nécessite une clé")).toHaveValue("");
   });
 
   it("désactive les boutons pendant la recherche", () => {

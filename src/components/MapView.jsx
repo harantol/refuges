@@ -1,10 +1,16 @@
-import { useEffect, useMemo } from "react";
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import { useEffect, useMemo, useState } from "react";
+import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import L from "leaflet";
 import { pointColor, iconUrl } from "../types";
 import { escapeHtml } from "../utils";
 import { BASEMAPS, HILLSHADE } from "../basemaps";
+import { fetchIgnHikingRoutes } from "../api";
+
+const ROUTE_MIN_ZOOM = 11;
+const ROUTE_ATTRIBUTION =
+  '&copy; <a href="https://geoservices.ign.fr/bdtopo">IGN</a> — BD TOPO&reg;';
+const noop = () => {};
 
 export function makeIcon(feature) {
   const color = pointColor(feature);
@@ -107,7 +113,88 @@ function FocusController({ focus, userPos }) {
   return null;
 }
 
-export default function MapView({ features, onSelect, onNavigate, onCloseMenus, focus, basemap, userPos, hillshade, fitToFeatures }) {
+function IgnHikingRoutes({ enabled, bbox, onStatus = noop }) {
+  const map = useMap();
+  const [routes, setRoutes] = useState([]);
+
+  useEffect(() => {
+    if (!enabled || !bbox) {
+      setRoutes([]);
+      return;
+    }
+    if (map.getZoom() < ROUTE_MIN_ZOOM) {
+      setRoutes([]);
+      onStatus(`Zoomez au niveau ${ROUTE_MIN_ZOOM} ou plus pour afficher les itinéraires IGN.`);
+      return;
+    }
+
+    const controller = new AbortController();
+    setRoutes([]);
+    fetchIgnHikingRoutes(bbox, { signal: controller.signal })
+      .then((result) => {
+        if (controller.signal.aborted) return;
+        setRoutes(result.features);
+        if (result.truncated) {
+          onStatus("Trop d’itinéraires IGN dans cette zone : zoomez pour afficher l’ensemble.");
+        }
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) {
+          onStatus("Erreur de chargement des itinéraires IGN : " + error.message);
+        }
+      });
+    return () => controller.abort();
+  }, [enabled, bbox, map, onStatus]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    map.attributionControl?.addAttribution(ROUTE_ATTRIBUTION);
+    return () => map.attributionControl?.removeAttribution(ROUTE_ATTRIBUTION);
+  }, [enabled, map]);
+
+  if (!enabled) return null;
+  return routes.map((route, index) => {
+    const segments = route.geometry?.coordinates;
+    if (!Array.isArray(segments)) return null;
+    const positions = segments
+      .map((segment) =>
+        Array.isArray(segment)
+          ? segment
+              .filter(
+                (point) =>
+                  Array.isArray(point) &&
+                  Number.isFinite(point[0]) &&
+                  Number.isFinite(point[1])
+              )
+              .map(([lng, lat]) => [lat, lng])
+          : []
+      )
+      .filter((segment) => segment.length > 1);
+    if (positions.length === 0) return null;
+    return (
+      <Polyline
+        key={route.id || index}
+        positions={positions}
+        pathOptions={{ color: "#c62828", opacity: 0.9, weight: 3 }}
+      />
+    );
+  });
+}
+
+export default function MapView({
+  features,
+  onSelect,
+  onNavigate,
+  onCloseMenus,
+  focus,
+  basemap,
+  userPos,
+  hillshade,
+  hikingRoutes,
+  routeBbox,
+  onMapStatus,
+  fitToFeatures,
+}) {
   const base = BASEMAPS[basemap] || BASEMAPS.topo;
   const markers = useMemo(
     () =>
@@ -137,6 +224,7 @@ export default function MapView({ features, onSelect, onNavigate, onCloseMenus, 
           pane="overlayPane"
         />
       )}
+      <IgnHikingRoutes enabled={hikingRoutes} bbox={routeBbox} onStatus={onMapStatus} />
       <MapEvents onNavigate={onNavigate} onCloseMenus={onCloseMenus} />
       <BoundsController features={features} fitToFeatures={fitToFeatures} />
       <FocusController focus={focus} userPos={userPos} />

@@ -7,6 +7,8 @@ const makeProps = (overrides = {}) => ({
   onBasemapChange: vi.fn(),
   hillshade: false,
   onHillshadeChange: vi.fn(),
+  hikingRoutes: false,
+  onHikingRoutesChange: vi.fn(),
   zoneOnly: false,
   onZoneOnlyToggle: vi.fn(),
   onLocate: vi.fn(),
@@ -63,6 +65,14 @@ describe("MapControls (boutons flottants mobile)", () => {
     expect(props.onBasemapChange).toHaveBeenCalledWith("satellite");
     fireEvent.click(screen.getByLabelText(/Pentes/));
     expect(props.onHillshadeChange).toHaveBeenCalledWith(true);
+  });
+
+  it("active les itinéraires pédestres IGN depuis le menu des fonds", () => {
+    const props = makeProps({ menu: "basemap" });
+    render(<MapControls {...props} />);
+    fireEvent.click(screen.getByLabelText("Itinéraires pédestres (IGN)"));
+    expect(props.onHikingRoutesChange).toHaveBeenCalledWith(true);
+    expect(screen.getByText(/visibles à partir du zoom 11/i)).toBeInTheDocument();
   });
 
   it("le bouton filtres ouvre le menu avec les types et le filtre 'depuis'", () => {

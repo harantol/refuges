@@ -6,6 +6,7 @@ import {
   fetchFiche,
   fetchPointsDetail,
   fetchMassifs,
+  fetchIgnHikingRoutes,
   fetchAllPoints,
   fetchAllPointsDetail,
 } from "./api";
@@ -124,6 +125,53 @@ describe("api refuges.info - construction des URLs", () => {
     const url = fetch.mock.calls[0][0];
     expect(url).toContain("/api/polygones?type_polygone=1");
     expect(url).toContain("bbox=world");
+  });
+
+  it("fetchIgnHikingRoutes charge les itinéraires pédestres IGN pour la bbox", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          numberMatched: 2,
+          features: [
+            { properties: { nature: "Itinéraire de randonnée pédestre" } },
+            { properties: { nature: "Itinéraire cyclable" } },
+          ],
+        }),
+      }))
+    );
+    const controller = new AbortController();
+    const result = await fetchIgnHikingRoutes("5.8,45.4,6.8,46.1", {
+      signal: controller.signal,
+    });
+    const [url, options] = fetch.mock.calls[0];
+    const query = new URL(url).searchParams;
+
+    expect(query.get("TYPENAMES")).toBe("BDTOPO_V3:itineraire_autre");
+    expect(query.get("COUNT")).toBe("3000");
+    expect(query.get("FILTER")).toContain("Itinéraire de randonnée pédestre");
+    expect(query.get("FILTER")).toContain("<gml:lowerCorner>5.8 45.4</gml:lowerCorner>");
+    expect(options.signal).toBe(controller.signal);
+    expect(result.features).toHaveLength(1);
+    expect(result.truncated).toBe(false);
+  });
+
+  it("signale lorsque la réponse des itinéraires IGN est limitée", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ numberMatched: 3001, features: Array(3000).fill({ properties: {} }) }),
+      }))
+    );
+    const result = await fetchIgnHikingRoutes("5,45,6,46");
+    expect(result.truncated).toBe(true);
+  });
+
+  it("refuse une bbox invalide pour la requête IGN", async () => {
+    await expect(fetchIgnHikingRoutes("bad,bbox")).rejects.toThrow("Emprise de carte invalide");
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("fetchAllPoints : monde entier en detail=simple nb_points=all", async () => {
