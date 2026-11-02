@@ -10,6 +10,8 @@ export default function MapControls({
   onBasemapChange,
   hillshade,
   onHillshadeChange,
+  hikingRoutes,
+  onHikingRoutesChange,
   zoneOnly,
   onZoneOnlyToggle,
   onLocate,
@@ -75,6 +77,15 @@ export default function MapControls({
               />
               ⛰️ Pentes (IGN)
             </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={hikingRoutes}
+                onChange={(e) => onHikingRoutesChange(e.target.checked)}
+              />
+              Itinéraires pédestres (IGN)
+            </label>
+            <p className="muted small">BD TOPO® — visibles à partir du zoom 11.</p>
             {basemap === "ign" && <IgnKeyForm onIgnKeySave={onIgnKeySave} />}
           </div>
         )}
