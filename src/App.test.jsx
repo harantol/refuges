@@ -242,25 +242,28 @@ describe("App (intégration, fetch mocké)", () => {
     expect(await screen.findByPlaceholderText(/Clé perso IGN/)).toBeInTheDocument();
   });
 
-  it("la case Pentes (menu 🗺️ de la carte) active/désactive la couche hillshade", async () => {
+  it("active les Pentes IGN par défaut et permet de les désactiver", async () => {
     render(<App />);
     await screen.findByText("Refuge Test");
     const map = screen.getByTestId("map");
-    expect(map.getAttribute("data-hillshade")).toBe("false");
+    expect(map.getAttribute("data-hillshade")).toBe("true");
     fireEvent.click(screen.getByLabelText("Fond de carte")); // ouvre le menu 🗺️
     const casePentes = screen.getByLabelText(/Pentes/); // unique maintenant (menu carte)
+    expect(casePentes).toBeChecked();
     fireEvent.click(casePentes);
-    expect(map.getAttribute("data-hillshade")).toBe("true");
+    expect(map.getAttribute("data-hillshade")).toBe("false");
   });
 
-  it("active les itinéraires pédestres IGN depuis le menu des fonds", async () => {
+  it("active les itinéraires pédestres IGN par défaut et permet de les masquer", async () => {
     render(<App />);
     await screen.findByText("Refuge Test");
     const map = screen.getByTestId("map");
-    expect(map.getAttribute("data-hiking-routes")).toBe("false");
-    fireEvent.click(screen.getByLabelText("Fond de carte"));
-    fireEvent.click(screen.getByLabelText("Itinéraires pédestres (IGN)"));
     expect(map.getAttribute("data-hiking-routes")).toBe("true");
+    fireEvent.click(screen.getByLabelText("Fond de carte"));
+    const routesToggle = screen.getByLabelText("Itinéraires pédestres (IGN)");
+    expect(routesToggle).toBeChecked();
+    fireEvent.click(routesToggle);
+    expect(map.getAttribute("data-hiking-routes")).toBe("false");
   });
 
   it("les contrôles flottants de la carte sont présents (fonds, interrupteur zone, position, filtres)", async () => {

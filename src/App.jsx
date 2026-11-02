@@ -43,8 +43,8 @@ export default function App() {
   const [uncheckedTypes, setUncheckedTypes] = useState(() => new Set());
   const [focus, setFocus] = useState(null);
   const [basemap, setBasemap] = useState("topo"); // OpenTopoMap par défaut
-  const [hillshade, setHillshade] = useState(false);
-  const [hikingRoutes, setHikingRoutes] = useState(false);
+  const [hillshade, setHillshade] = useState(true);
+  const [hikingRoutes, setHikingRoutes] = useState(true);
   const [mapMenu, setMapMenu] = useState(null); // "basemap" | "filters" | null (menu flottant mobile)
   const toggleMapMenu = useCallback((m) => setMapMenu((prev) => (prev === m ? null : m)), []);
   const [userPos, setUserPos] = useState(null);
