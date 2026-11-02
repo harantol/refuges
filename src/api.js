@@ -2,58 +2,57 @@ const API = "https://www.refuges.info/api";
 
 const NB_POINTS_MAX = 500;
 
-async function apiFetch(url) {
-  const res = await fetch(url);
+async function apiFetch(url, options) {
+  const res = await fetch(url, options);
   if (!res.ok) throw new Error("HTTP " + res.status);
   return res.json();
 }
 
-export const fetchZone = (bbox, recentDays = 0) =>
+export const fetchZone = (bbox, recentDays = 0, { signal } = {}) =>
   apiFetch(
     `${API}/bbox?bbox=${bbox}&format=geojson&detail=simple&nb_points=${NB_POINTS_MAX}&cache=300` +
-      (recentDays > 0 ? `&depuis=-${recentDays * 86400}` : "")
+      (recentDays > 0 ? `&depuis=-${recentDays * 86400}` : ""),
+    { signal }
   );
 
-export const fetchMassifPoints = (massifId, recentDays = 0) =>
+export const fetchMassifPoints = (massifId, recentDays = 0, { signal } = {}) =>
   apiFetch(
     `${API}/massif?massif=${massifId}&format=geojson&detail=simple&nb_points=${NB_POINTS_MAX}&cache=300` +
-      (recentDays > 0 ? `&depuis=-${recentDays * 86400}` : "")
+      (recentDays > 0 ? `&depuis=-${recentDays * 86400}` : ""),
+    { signal }
   );
 
-// /api/point ne supporte QU'UN SEUL id (intval côté serveur) : on fait un appel par id.
-export const fetchPointsByIds = async (ids) => {
+// /api/point ne supporte QU'UN SEUL id (intval côté serveur) : limiter le fan-out.
+const fetchPointsForIds = async (ids, detail, signal) => {
   const features = [];
-  const results = await Promise.all(
-    ids.map((id) =>
-      apiFetch(`${API}/point?id=${id}&format=geojson&detail=simple&nb_points=all&cache=300`)
-        .then((d) => d.features || [])
-        .catch(() => [])
-    )
-  );
-  for (const fs of results) features.push(...fs);
+  const concurrency = 6;
+  for (let i = 0; i < ids.length; i += concurrency) {
+    const batch = ids.slice(i, i + concurrency);
+    const results = await Promise.all(
+      batch.map((id) =>
+        apiFetch(
+          `${API}/point?id=${id}&format=geojson&detail=${detail}&nb_points=all&cache=300`,
+          { signal }
+        )
+      )
+    );
+    for (const result of results) features.push(...(result.features || []));
+  }
   return { features, size: features.length };
 };
 
-export const fetchFiche = (id) =>
-  apiFetch(`${API}/point?id=${id}&format=geojson&detail=fiche&format_texte=html`);
+export const fetchPointsByIds = (ids, { signal } = {}) =>
+  fetchPointsForIds(ids, "simple", signal);
+
+export const fetchFiche = (id, { signal } = {}) =>
+  apiFetch(`${API}/point?id=${id}&format=geojson&detail=fiche&format_texte=html`, { signal });
 
 // Détail complet (inclut info_comp) pour un lot d'ids.
-// /api/point ne prenant qu'un id à la fois, on fait un appel par id.
-export const fetchPointsDetail = async (ids) => {
-  const features = [];
-  const results = await Promise.all(
-    ids.map((id) =>
-      apiFetch(`${API}/point?id=${id}&format=geojson&detail=complet&nb_points=all&cache=300`)
-        .then((d) => d.features || [])
-        .catch(() => [])
-    )
-  );
-  for (const fs of results) features.push(...fs);
-  return { features, size: features.length };
-};
+export const fetchPointsDetail = (ids, { signal } = {}) =>
+  fetchPointsForIds(ids, "complet", signal);
 
-export const fetchMassifs = () =>
-  apiFetch(`${API}/polygones?type_polygone=1&format=geojson&bbox=world`);
+export const fetchMassifs = ({ signal } = {}) =>
+  apiFetch(`${API}/polygones?type_polygone=1&format=geojson&bbox=world`, { signal });
 
 // Base complète (détail simple : nom, type, altitude, état, places, lien) pour la
 // recherche détaillée côté client (~3,8 Mo, chargée une fois et mise en cache session)

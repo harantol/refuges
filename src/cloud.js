@@ -26,6 +26,7 @@ const cfg = () => ({
 export const cloudConfigured = () => Boolean(cfg().url && cfg().key);
 
 const TOKEN_KEY = "cloud-auth-token";
+const REFRESH_TOKEN_KEY = "cloud-auth-refresh-token";
 
 export function getToken() {
   try {
@@ -42,6 +43,33 @@ export function setToken(t) {
   } catch {
     /* stockage indisponible */
   }
+}
+
+function getRefreshToken() {
+  try {
+    return localStorage.getItem(REFRESH_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function setRefreshToken(t) {
+  try {
+    if (t) localStorage.setItem(REFRESH_TOKEN_KEY, t);
+    else localStorage.removeItem(REFRESH_TOKEN_KEY);
+  } catch {
+    /* stockage indisponible */
+  }
+}
+
+function storeSession(session) {
+  setToken(session.access_token);
+  setRefreshToken(session.refresh_token);
+}
+
+function clearSession() {
+  setToken(null);
+  setRefreshToken(null);
 }
 
 async function req(path, { method = "GET", body, auth = false } = {}) {
@@ -67,7 +95,9 @@ async function req(path, { method = "GET", body, auth = false } = {}) {
     } catch {
       /* body non JSON */
     }
-    throw new Error(msg);
+    const error = new Error(msg);
+    error.status = res.status;
+    throw error;
   }
   if (text) return JSON.parse(text);
   if (typeof res.json === "function") {
@@ -89,7 +119,7 @@ export const auth = {
       method: "POST",
       body: { email, password },
     });
-    setToken(r.access_token);
+    storeSession(r);
     return r.user;
   },
 
@@ -98,9 +128,29 @@ export const auth = {
     if (!getToken()) return null;
     try {
       return await req("/auth/v1/user", { auth: true });
-    } catch {
-      setToken(null);
-      return null;
+    } catch (error) {
+      if (error.status === 401 || error.status === 403) {
+        const refreshToken = getRefreshToken();
+        if (!refreshToken) {
+          clearSession();
+          return null;
+        }
+        try {
+          const session = await req("/auth/v1/token?grant_type=refresh_token", {
+            method: "POST",
+            body: { refresh_token: refreshToken },
+          });
+          storeSession(session);
+          return await req("/auth/v1/user", { auth: true });
+        } catch (refreshError) {
+          if ([400, 401, 403].includes(refreshError.status)) {
+            clearSession();
+            return null;
+          }
+          throw refreshError;
+        }
+      }
+      throw error;
     }
   },
 
@@ -110,7 +160,7 @@ export const auth = {
     } catch {
       /* token déjà invalide */
     }
-    setToken(null);
+    clearSession();
   },
 };
 
