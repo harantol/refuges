@@ -7,7 +7,7 @@ import { TYPE_LABELS } from "./types";
 vi.mock("./components/MapView", async () => {
   const React = await import("react");
   return {
-    default: ({ onNavigate, basemap, hillshade, onCloseMenus, fitToFeatures, features, onSelect }) => {
+    default: ({ onNavigate, basemap, hillshade, hikingRoutes, onCloseMenus, fitToFeatures, features, onSelect }) => {
       React.useEffect(() => {
         onNavigate("6.0,45.5,7.0,46.0");
       }, [onNavigate]);
@@ -17,6 +17,7 @@ vi.mock("./components/MapView", async () => {
           "data-testid": "map",
           "data-basemap": basemap,
           "data-hillshade": String(Boolean(hillshade)),
+          "data-hiking-routes": String(Boolean(hikingRoutes)),
           "data-fit": String(Boolean(fitToFeatures)),
         },
         React.createElement(
@@ -250,6 +251,16 @@ describe("App (intégration, fetch mocké)", () => {
     const casePentes = screen.getByLabelText(/Pentes/); // unique maintenant (menu carte)
     fireEvent.click(casePentes);
     expect(map.getAttribute("data-hillshade")).toBe("true");
+  });
+
+  it("active les itinéraires pédestres IGN depuis le menu des fonds", async () => {
+    render(<App />);
+    await screen.findByText("Refuge Test");
+    const map = screen.getByTestId("map");
+    expect(map.getAttribute("data-hiking-routes")).toBe("false");
+    fireEvent.click(screen.getByLabelText("Fond de carte"));
+    fireEvent.click(screen.getByLabelText("Itinéraires pédestres (IGN)"));
+    expect(map.getAttribute("data-hiking-routes")).toBe("true");
   });
 
   it("les contrôles flottants de la carte sont présents (fonds, interrupteur zone, position, filtres)", async () => {

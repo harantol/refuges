@@ -44,6 +44,7 @@ export default function App() {
   const [focus, setFocus] = useState(null);
   const [basemap, setBasemap] = useState("topo"); // OpenTopoMap par défaut
   const [hillshade, setHillshade] = useState(false);
+  const [hikingRoutes, setHikingRoutes] = useState(false);
   const [mapMenu, setMapMenu] = useState(null); // "basemap" | "filters" | null (menu flottant mobile)
   const toggleMapMenu = useCallback((m) => setMapMenu((prev) => (prev === m ? null : m)), []);
   const [userPos, setUserPos] = useState(null);
@@ -636,13 +637,15 @@ export default function App() {
       />
       <main>
         <div id="map-area">
-          <MapView features={displayedFeatures} onSelect={selectPoint} onNavigate={onNavigate} onCloseMenus={closeMenus} focus={focus} basemap={basemap} userPos={userPos} hillshade={hillshade} fitToFeatures={mode.type === "massif"} />
+          <MapView features={displayedFeatures} onSelect={selectPoint} onNavigate={onNavigate} onCloseMenus={closeMenus} focus={focus} basemap={basemap} userPos={userPos} hillshade={hillshade} hikingRoutes={hikingRoutes} routeBbox={bbox} onMapStatus={setStatus} fitToFeatures={mode.type === "massif"} />
           <MapStatus loading={loading} status={status} />
           <MapControls
             basemap={basemap}
             onBasemapChange={changeBasemap}
             hillshade={hillshade}
             onHillshadeChange={setHillshade}
+            hikingRoutes={hikingRoutes}
+            onHikingRoutesChange={setHikingRoutes}
             zoneOnly={zoneOnly}
             onZoneOnlyToggle={() => setZoneOnly((v) => !v)}
             onLocate={locate}
