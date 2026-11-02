@@ -224,6 +224,19 @@ describe("App (intégration, fetch mocké)", () => {
     expect(fetch.mock.calls.some(([url]) => url.includes("/api/polygones?type_polygone=1"))).toBe(true);
   });
 
+  it("affiche l'erreur de chargement au lieu de laisser le spinner actif", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url) => {
+        if (String(url).includes("/api/bbox?bbox=")) throw new Error("Network unavailable");
+        return { ok: true, status: 200, json: async () => ({ features: [] }) };
+      })
+    );
+    render(<App />);
+    expect(await screen.findByText("Erreur de chargement : Network unavailable")).toBeInTheDocument();
+    expect(document.querySelector("#map-loading")).toBeNull();
+  });
+
   it("fond de carte par défaut = OpenTopoMap", async () => {
     render(<App />);
     await screen.findByText("Refuge Test");
