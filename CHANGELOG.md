@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.1](https://github.com/harantol/refuges/compare/explorateur-refuges-v1.2.0...explorateur-refuges-v1.2.1) (2026-11-02)
+
+
+### Bug Fixes
+
+* prioritize search results over favorites ([97b0fec](https://github.com/harantol/refuges/commit/97b0fec07e260485659106cf42282f51abd21b29))
+* prioritize search results over favorites ([bbbb208](https://github.com/harantol/refuges/commit/bbbb208c3afe80a727bac87eb2851dec3ce7b094))
+* prioritize search results over favorites ([2603b55](https://github.com/harantol/refuges/commit/2603b5561e6e4f763eeb27398987b1617a94e690))
+
 ## [1.2.0](https://github.com/harantol/refuges/compare/explorateur-refuges-v1.1.0...explorateur-refuges-v1.2.0) (2026-11-02)
 
 
