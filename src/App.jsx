@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import packageJson from "../package.json";
 import Header from "./components/Header";
 import MapView from "./components/MapView";
 import MapControls from "./components/MapControls";
@@ -682,6 +683,7 @@ export default function App() {
       <footer id="credits">
         Données <a href="https://www.refuges.info" target="_blank" rel="noopener">refuges.info</a> (CC BY-SA 2.0) &middot; Carte &copy;{" "}
         <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL)
+        <span id="app-version" title={`Version ${packageJson.version}`}> &middot; v{packageJson.version}</span>
       </footer>
     </>
   );
